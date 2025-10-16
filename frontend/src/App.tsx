@@ -1,38 +1,24 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
-// --- Placeholder Page Components ---
-const HomePage = () => <div>Home Feed Page</div>;
-const DiscoverPage = () => <div>Discover Users Page</div>;
-const ProfilePage = () => <div>User Profile Page</div>;
-const RankingPage = () => <div>Ranking Creation Page</div>;
-const LoginPage = () => <div className='text-red-500'>Login Page</div>;
-const RegisterPage = () => <div>Register Page</div>;
-const NotFoundPage = () => <div>404 Not Found</div>;
+import Layout from './components/Layout';
+import FeedPage from './pages/FeedPage';
+import MyTierlistsPage from './pages/MyTierlistsPage';
+import KinPage from './pages/KinPage';
+import AccountPage from './pages/AccountPage';
 
 function App() {
-  return (
-    <BrowserRouter>
-      <div className="flex min-h-screen bg-gray-50">
-        {/* The persistent sidebar navigation */}
-
-        {/* The main content area that will contain the pages */}
-        <main className="flex-grow flex justify-center py-8">
-          {/* A centered container for the content itself */}
-          <div className="w-full max-w-2xl px-4">
+    return (
+        <BrowserRouter>
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/discover" element={<DiscoverPage />} />
-              <Route path="/profile/:userId" element={<ProfilePage />} />
-              <Route path="/rank/:templateId" element={<RankingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="*" element={<NotFoundPage />} />
+                <Route element={<Layout />}>
+                    <Route index element={<FeedPage />} />
+                    <Route path="/tierlists" element={<MyTierlistsPage />} />
+                    <Route path="/kin" element={<KinPage />} />
+                    <Route path="/account" element={<AccountPage />} />
+                </Route>
             </Routes>
-          </div>
-        </main>
-      </div>
-    </BrowserRouter>
-  );
+        </BrowserRouter>
+    );
 }
 
 export default App;
