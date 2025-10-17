@@ -1,8 +1,12 @@
 import React from 'react';
-import PageWrapper from '../components/PageWrapper';
 
 function MyTierlistsPage(): React.ReactElement {
-    return <PageWrapper title="My Tierlists">Page Content</PageWrapper>;
+    return (
+        <>
+            <h1 className="text-3xl font-bold mb-4">My Tierlists</h1>
+            <div>Page Content</div>
+        </>
+    );
 }
 
 export default MyTierlistsPage;
