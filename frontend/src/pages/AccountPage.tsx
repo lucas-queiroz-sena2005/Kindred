@@ -1,8 +1,12 @@
 import React from 'react';
-import PageWrapper from '../components/PageWrapper';
 
 function AccountPage(): React.ReactElement {
-    return <PageWrapper title="My Account">Page Content</PageWrapper>;
+    return (
+        <>
+            <h1 className="text-3xl font-bold mb-4">My Account</h1>
+            <div>Page Content</div>
+        </>
+    );
 }
 
 export default AccountPage;
