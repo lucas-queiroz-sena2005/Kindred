@@ -1,33 +1,41 @@
 import "dotenv/config";
-import express, { Express } from "express";
-import session from "express-session";
+import express, { Request, Response, NextFunction, Express } from "express";
 import pool from "../db/db.js";
 import apiRoutes from "../routes/index.js";
+import cors from "cors"
 
 const PORT = process.env.PORT || 3001;
 const app: Express = express();
 
-const sessionSecret = process.env.SESSION_SECRET;
-if (!sessionSecret) {
-  console.error("🔴 Error: SESSION_SECRET is not defined in your .env file.");
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("🔴 Error: JWt_SECRET is not defined in your .env file.");
   process.exit(1);
 }
 
+const corsOptions = {
+  origin: `http://localhost:${PORT}`,
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(
-  session({
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-    },
-  })
-);
-
+app.use(express.static('public'))
 app.use("/api", apiRoutes);
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error("🔴 An unhandled error occurred:", err.stack);
+
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: "The request body contains malformed JSON."
+    });
+
+  }
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: "An unexpected error occurred on the server."
+  });
+});
 
 async function testDatabaseConnection() {
   try {
