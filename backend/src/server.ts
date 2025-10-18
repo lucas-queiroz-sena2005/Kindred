@@ -7,16 +7,11 @@ import cors from "cors"
 const PORT = process.env.PORT || 3001;
 const app: Express = express();
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error("🔴 Error: JWt_SECRET is not defined in your .env file.");
-  process.exit(1);
-}
-
 const corsOptions = {
   origin: `http://localhost:${PORT}`,
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static('public'))

@@ -3,15 +3,12 @@ import pool from '../db/db.js';
 import { ConflictError } from '../errors/customErrors.js';
 import { validateRegistrationInput } from '../utils/authValidation.js';
 import { authConfig } from '../config/authConfig.js';
-import { UserRegistrationData } from '../types/userTypes.js';
+import {
+  RegisteredUser,
+  UserData
+} from '../types/userTypes.js';
 
-interface RegisteredUser {
-  id: number;
-  username: string;
-}
-
-export async function register(userData: UserRegistrationData): Promise<RegisteredUser> {
-  
+export async function register(userData: UserData): Promise<RegisteredUser> {
   // Sanitization
   const trimmedData = {
     ...userData,
@@ -42,4 +39,34 @@ export async function register(userData: UserRegistrationData): Promise<Register
   const newUserId = newUserResult.rows[0].id;
 
   return { id: newUserId, username: trimmedData.username };
+}
+
+export async function login(useData: UserData): Promise<RegisteredUser> {
+  const trimmedData = {
+    ...useData,
+    username: useData.username.trim(),
+    email: useData.email.trim(),
+  };
+
+  const existingUser = await pool.query<{ id: number }>(
+    'SELECT id, password_hash FROM users WHERE username = $1 OR email = $2',
+    [trimmedData.username, trimmedData.email]
+  );
+
+  if (existingUser.rows.length === 0) {
+    throw new ConflictError('Email or username not found.');
+  }
+
+  const passwordMatch = await bcrypt.compare(
+    trimmedData.password,
+    existingUser.rows[0].password_hash
+  );
+
+  if (!passwordMatch) {
+    throw new ConflictError('Incorrect password.');
+  }
+
+  const { id, username } = existingUser.rows[0];
+
+  return { id: id, username: username }
 }
