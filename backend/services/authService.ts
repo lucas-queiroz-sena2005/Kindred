@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import pool from '../db/db.js';
 import { ConflictError } from '../errors/customErrors.js';
 import { validateRegistrationInput } from '../utils/authValidation.js';
