@@ -1,8 +1,8 @@
 import "dotenv/config";
 import express, { Express } from "express";
 import session from "express-session";
-import pool from "./db.js";
-import apiRoutes from "./routes/index.js";
+import pool from "../db/db.js";
+import apiRoutes from "../routes/index.js";
 
 const PORT = process.env.PORT || 3001;
 const app: Express = express();

@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import pool from '../db.js';
+import pool from '../db/db.js';
 import { ConflictError } from '../errors/customErrors.js';
 import { validateRegistrationInput } from '../utils/authValidation.js';
 import { authConfig } from '../config/authConfig.js';
