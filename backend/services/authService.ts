@@ -15,9 +15,8 @@ export async function register(userData: UserRegistrationData): Promise<Register
   // Sanitization
   const trimmedData = {
     ...userData,
-    name: userData.name.trim(),
-    email: userData.email.trim(),
     username: userData.username.trim(),
+    email: userData.email.trim(),
   };
   validateRegistrationInput(trimmedData);
 
@@ -36,8 +35,8 @@ export async function register(userData: UserRegistrationData): Promise<Register
 
   // User insertion
   const newUserResult = await pool.query<{ id: number }>(
-    'INSERT INTO users (name, email, username, password_hash) VALUES ($1, $2, $3, $4) RETURNING id',
-    [trimmedData.name, trimmedData.email, trimmedData.username, hashedPassword]
+    'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
+    [ trimmedData.username, trimmedData.email, hashedPassword]
   );
 
   const newUserId = newUserResult.rows[0].id;

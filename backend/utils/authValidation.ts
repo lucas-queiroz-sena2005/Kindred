@@ -4,9 +4,9 @@ import { authConfig } from '../config/authConfig.js';
 import { UserRegistrationData } from '../types/userTypes.js';
 
 export function validateRegistrationInput(data: Partial<UserRegistrationData>): asserts data is UserRegistrationData {
-  const { name, email, username, password } = data;
+  const { email, username, password } = data;
 
-  if (!name || !email || !username || !password) {
+  if (!email || !username || !password) {
     throw new ValidationError('All fields are required.');
   }
 
