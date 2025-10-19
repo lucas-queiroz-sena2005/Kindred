@@ -19,7 +19,6 @@ type AuthConfig = {
   IS_PRODUCTION: boolean;
 };
 
-// Final export (strongly typed)
 export const authConfig: AuthConfig = {
   // Validation
   USERNAME_REGEX: /^[a-zA-Z0-9_-]{1,20}$/,
