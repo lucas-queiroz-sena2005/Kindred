@@ -1,8 +1,10 @@
-import { Pool } from 'pg';
-import 'dotenv/config';
+import { Pool } from "pg";
+import "dotenv/config";
 
 if (!process.env.DATABASE_URL) {
-  console.error('🔴 FATAL ERROR: DATABASE_URL is not defined in the environment variables.');
+  console.error(
+    "🔴 FATAL ERROR: DATABASE_URL is not defined in the environment variables."
+  );
   process.exit(1);
 }
 
