@@ -16,7 +16,7 @@ export class ApiError extends Error {
  * Represents a user input validation error (HTTP 400).
  */
 export class ValidationError extends ApiError {
-  constructor(message = 'Input validation failed') {
+  constructor(message = "Input validation failed") {
     super(message, 400);
   }
 }
@@ -25,7 +25,7 @@ export class ValidationError extends ApiError {
  * Represents a resource conflict, e.g., a user already exists (HTTP 409).
  */
 export class ConflictError extends ApiError {
-  constructor(message = 'Resource already exists') {
+  constructor(message = "Resource already exists") {
     super(message, 409);
   }
 }
