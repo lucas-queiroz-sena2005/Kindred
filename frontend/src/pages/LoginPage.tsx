@@ -10,8 +10,8 @@ function LoginPage(): React.ReactElement {
 
   const loginFields: FormField[] = [
     {
-      name: "usernameOrEmail",
-      label: "Username or Email",
+      name: "username",
+      label: "Username",
       type: "text",
       required: true,
     },
@@ -19,7 +19,7 @@ function LoginPage(): React.ReactElement {
   ];
 
   const initialState = {
-    usernameOrEmail: "",
+    username: "",
     password: "",
   };
 

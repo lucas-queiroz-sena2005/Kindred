@@ -1,8 +1,10 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import type { LoginCredentials, RegisterCredentials } from "./types/auth";
 
+const baseURL = import.meta.env.VITE_API_BASE_URL;
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: baseURL,
   withCredentials: true,
 });
 
@@ -11,10 +13,10 @@ export async function loginUser(creds: LoginCredentials): Promise<{ username: st
     const response = await api.post("/auth/login", creds);
     return response.data;
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error || "Login failed");
+    if (isAxiosError(error) && error.response) {
+      throw error;
     }
-    throw error;
+    throw new Error('An unexpected error occurred during login.');
   }
 }
 
@@ -23,9 +25,9 @@ export async function registerUser(creds: RegisterCredentials): Promise<{ userna
     const response = await api.post("/auth/register", creds);
     return response.data;
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error || "Registration failed");
+    if (isAxiosError(error) && error.response) {
+      throw error;
     }
-    throw error;
+    throw new Error('An unexpected error occurred during registration.');
   }
 }
