@@ -23,10 +23,10 @@ function LoginPage(): React.ReactElement {
     password: "",
   };
 
-  function handleLoginSuccess(data: { username: string }) {
+  function handleLoginSuccess(data: { id: number; username: string }) {
     console.log(`Welcome, ${data.username}!`);
     navigate(from, { replace: true });
-  };
+  }
 
   return (
     <div className="p-8 bg-white rounded shadow-md w-full max-w-sm mx-auto mt-10">
