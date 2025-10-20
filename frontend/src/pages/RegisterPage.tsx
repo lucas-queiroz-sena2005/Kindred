@@ -1,10 +1,11 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerUser } from "../api";
 import AuthForm from "../components/AuthForm";
 import type { FormField } from "../components/AuthForm";
+import { useAuth } from "../hooks/useAuth";
 function RegisterPage(): React.ReactElement {
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const registerFields: FormField[] = [
     { name: "username", label: "Username", type: "text", required: true },
@@ -32,7 +33,7 @@ function RegisterPage(): React.ReactElement {
       <AuthForm
         fields={registerFields}
         initialState={initialState}
-        submitAction={registerUser}
+        submitAction={register}
         onSuccess={handleRegisterSuccess}
         submitButtonText="Create Account"
         submittingButtonText="Creating Account..."
