@@ -10,7 +10,7 @@ export async function checkAuthStatus(): Promise<{
   user: { id: number; username: string };
 } | null> {
   try {
-    const response = await api.get("/me");
+    const response = await api.get("/user/me");
     return response.data;
   } catch (error) {
     return null;
