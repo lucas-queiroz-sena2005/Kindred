@@ -1,14 +1,25 @@
 import axios, { isAxiosError } from "axios";
 import type { LoginCredentials, RegisterCredentials } from "./types/auth";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL;
-
 const api = axios.create({
-  baseURL: baseURL,
+  baseURL: "/api",
   withCredentials: true,
 });
 
-export async function loginUser(creds: LoginCredentials): Promise<{ username: string }> {
+export async function checkAuthStatus(): Promise<{
+  user: { id: number; username: string };
+} | null> {
+  try {
+    const response = await api.get("/me");
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function loginUser(
+  creds: LoginCredentials
+): Promise<{ id: number; username: string }> {
   try {
     const response = await api.post("/auth/login", creds);
     return response.data;
@@ -16,11 +27,13 @@ export async function loginUser(creds: LoginCredentials): Promise<{ username: st
     if (isAxiosError(error) && error.response) {
       throw error;
     }
-    throw new Error('An unexpected error occurred during login.');
+    throw new Error("An unexpected error occurred during login.");
   }
 }
 
-export async function registerUser(creds: RegisterCredentials): Promise<{ username: string }> {
+export async function registerUser(
+  creds: RegisterCredentials
+): Promise<{ username: string }> {
   try {
     const response = await api.post("/auth/register", creds);
     return response.data;
@@ -28,6 +41,17 @@ export async function registerUser(creds: RegisterCredentials): Promise<{ userna
     if (isAxiosError(error) && error.response) {
       throw error;
     }
-    throw new Error('An unexpected error occurred during registration.');
+    throw new Error("An unexpected error occurred during registration.");
+  }
+}
+
+export async function logoutUser(): Promise<void> {
+  try {
+    await api.post("/auth/logout");
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw error;
+    }
+    throw new Error("An unexpected error occurred during logout.");
   }
 }
