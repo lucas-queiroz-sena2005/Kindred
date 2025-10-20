@@ -20,4 +20,5 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  register: (credentials: RegisterCredentials) => Promise<any>;
 }

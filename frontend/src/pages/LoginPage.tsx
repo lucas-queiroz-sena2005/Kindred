@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { loginUser } from "../api";
 import AuthForm from "../components/AuthForm";
 import type { FormField } from "../components/AuthForm";
+import { useAuth } from "../hooks/useAuth";
 
 function LoginPage(): React.ReactElement {
   const location = useLocation();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const from = location.state?.from || "/";
 
   const loginFields: FormField[] = [
@@ -23,8 +24,8 @@ function LoginPage(): React.ReactElement {
     password: "",
   };
 
-  function handleLoginSuccess(data: { id: number; username: string }) {
-    console.log(`Welcome, ${data.username}!`);
+  function handleLoginSuccess() {
+    console.log(`Login successful!`);
     navigate(from, { replace: true });
   }
 
@@ -34,7 +35,7 @@ function LoginPage(): React.ReactElement {
       <AuthForm
         fields={loginFields}
         initialState={initialState}
-        submitAction={loginUser}
+        submitAction={login}
         onSuccess={handleLoginSuccess}
         submitButtonText="Login"
         submittingButtonText="Logging in..."

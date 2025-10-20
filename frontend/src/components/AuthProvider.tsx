@@ -1,7 +1,12 @@
 import { createContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { checkAuthStatus, loginUser, logoutUser } from "../api";
-import type { LoginCredentials, User, AuthContextType } from "../types/auth";
+import { checkAuthStatus, loginUser, logoutUser, registerUser } from "../api";
+import type {
+  LoginCredentials,
+  RegisterCredentials,
+  User,
+  AuthContextType,
+} from "../types/auth";
 
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
@@ -47,12 +52,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function handleRegister(
+    credentials: RegisterCredentials
+  ): Promise<any> {
+    try {
+      return await registerUser(credentials);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   const value = {
     isAuthenticated: !!user,
     user,
     isLoading,
     login: handleLogin,
     logout: handleLogout,
+    register: handleRegister,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
