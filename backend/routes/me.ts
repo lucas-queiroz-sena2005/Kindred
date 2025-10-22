@@ -9,7 +9,6 @@ userRouter.get("/me", async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.id;
 
     if (!userId) {
-      // This case should technically be handled by isAuthenticated, but it's good practice
       return res.status(401).json({ message: "Authentication error." });
     }
 
