@@ -3,6 +3,8 @@ import express, { Request, Response, NextFunction, Express } from "express";
 import pool from "../db/db.js";
 import apiRoutes from "../routes/index.js";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
 
 const PORT = process.env.PORT || 3001;
 const app: Express = express();
@@ -14,6 +16,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser())
 app.use(express.static("public"));
 app.use("/api", apiRoutes);
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

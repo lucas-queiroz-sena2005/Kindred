@@ -15,14 +15,14 @@ interface Director {
 interface MovieCredit {
   id: number;
   title: string;
-  release_date: string;
+  release_date: string; // format: "YYYY-MM-DD"
   poster_path: string | null;
   genre_ids: number[];
   job: string;
   vote_count: number;
 }
 
-const DIRECTOR_IDS_TO_SEED = [525, 137427, 1032]; // Nolan, Villeneuve, Fincher
+const DIRECTOR_IDS_TO_SEED = [525, 137427, 118]; // Nolan, Villeneuve, Scorsese
 const DOCUMENTARY_GENRE_ID = 99;
 const MINIMUM_VOTE_COUNT = 100;
 
@@ -31,14 +31,27 @@ const tmdb = axios.create({
   params: { api_key: process.env.TMDB_API_KEY },
 });
 
+/**
+ * Generates placeholder strings for bulk INSERT statements.
+ * e.g., for 2 rows and 3 columns: "($1, $2, $3), ($4, $5, $6)"
+ */
+function buildBulkInsertPlaceholders(rows: number, columns: number): string {
+  let paramIndex = 1;
+  return Array.from({ length: rows }, () => {
+    const rowPlaceholders = Array.from({ length: columns }, () => `$${paramIndex++}`);
+    return `(${rowPlaceholders.join(", ")})`;
+  }).join(", ");
+}
+
 async function clearDatabase(client: PoolClient) {
   console.log("--- Clearing database ---");
-  // Expanded to include all tables for a full reset
   await client.query(
-    "TRUNCATE TABLE ranked_items, user_rankings, template_movies, movie_genres, messages RESTART IDENTITY CASCADE"
+    `--sql
+    TRUNCATE TABLE ranked_items, user_rankings, template_movies, movie_genres, messages RESTART IDENTITY CASCADE`
   );
   await client.query(
-    "TRUNCATE TABLE users, movies, directors, genres, tierlist_templates RESTART IDENTITY CASCADE"
+    `--sql
+    TRUNCATE TABLE users, movies, directors, genres, tierlist_templates RESTART IDENTITY CASCADE`
   );
   console.log("Database cleared.");
 }
@@ -46,12 +59,21 @@ async function clearDatabase(client: PoolClient) {
 async function seedGenres(client: PoolClient) {
   console.log("--- Seeding genres ---");
   const { data } = await tmdb.get<{ genres: Genre[] }>("/genre/movie/list");
-  for (const genre of data.genres) {
-    await client.query(
-      "INSERT INTO genres (id, name) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING",
-      [genre.id, genre.name]
-    );
+
+  if (!data.genres || data.genres.length === 0) {
+    console.log("No genres to seed.");
+    return;
   }
+
+  const genreValues = data.genres.map((g) => [g.id, g.name]);
+  const placeholders = buildBulkInsertPlaceholders(genreValues.length, 2);
+  const insertQuery = `--sql
+    INSERT INTO genres (id, name)
+    VALUES ${placeholders}
+    ON CONFLICT (id) DO NOTHING
+  `;
+  
+  await client.query(insertQuery, genreValues.flat());
   console.log(`Seeded ${data.genres.length} genres.`);
 }
 
@@ -63,7 +85,11 @@ async function seedDirectorAndMovies(
     `/person/${directorTmdbId}`
   );
   await client.query(
-    "INSERT INTO directors (id, name) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING",
+    `--sql
+    INSERT INTO directors (id, name)
+    VALUES ($1, $2)
+    ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name
+    `,
     [director.id, director.name]
   );
   console.log(`--- Seeding director: ${director.name} ---`);
@@ -80,27 +106,45 @@ async function seedDirectorAndMovies(
       !film.genre_ids.includes(DOCUMENTARY_GENRE_ID)
   );
 
-  const movieIds: number[] = [];
-  for (const film of films) {
-    await client.query(
-      `INSERT INTO movies (id, title, release_year, director_id, poster_path) VALUES ($1, $2, $3, $4, $5)`,
-      [
-        film.id,
-        film.title,
-        parseInt(film.release_date.split("-")[0]),
-        director.id,
-        film.poster_path,
-      ]
-    );
-    movieIds.push(film.id);
-
-    for (const genreId of film.genre_ids) {
-      await client.query(
-        "INSERT INTO movie_genres (movie_id, genre_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-        [film.id, genreId]
-      );
-    }
+  if (films.length === 0) {
+    console.log(`No films to seed for ${director.name}.`);
+    return { directorName: director.name, movieIds: [] };
   }
+
+  const movieValues = films.map((film) => [
+    film.id,
+    film.title,
+    parseInt(film.release_date.split("-")[0]),
+    director.id,
+    film.poster_path,
+  ]);
+
+  const moviePlaceholders = buildBulkInsertPlaceholders(movieValues.length, 5);
+  const movieInsertQuery = `--sql
+    INSERT INTO movies (id, title, release_year, director_id, poster_path)
+    VALUES ${moviePlaceholders}
+    ON CONFLICT (id) DO UPDATE SET
+      title = EXCLUDED.title,
+      release_year = EXCLUDED.release_year,
+      poster_path = EXCLUDED.poster_path
+  `;
+  await client.query(movieInsertQuery, movieValues.flat());
+
+  const movieGenreValues = films.flatMap((film) =>
+    film.genre_ids.map((genreId) => [film.id, genreId])
+  );
+  
+  if (movieGenreValues.length > 0) {
+    const genrePlaceholders = buildBulkInsertPlaceholders(movieGenreValues.length, 2);
+    const movieGenreInsertQuery = `--sql
+      INSERT INTO movie_genres (movie_id, genre_id)
+      VALUES ${genrePlaceholders}
+      ON CONFLICT (movie_id, genre_id) DO NOTHING
+    `;
+    await client.query(movieGenreInsertQuery, movieGenreValues.flat());
+  }
+
+  const movieIds = films.map((film) => film.id);
   console.log(`Seeded ${films.length} films for ${director.name}.`);
   return { directorName: director.name, movieIds };
 }
@@ -109,7 +153,10 @@ async function seedUsers(client: PoolClient) {
   console.log("--- Seeding users ---");
   const hash = await bcrypt.hash("password123", 10);
   await client.query(
-    `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3)`,
+    `--sql
+    INSERT INTO users (username, email, password_hash)
+    VALUES ($1, $2, $3)
+    `,
     ["testuser", "test@test.com", hash]
   );
   console.log("Seeded testuser (pw: password123)");
@@ -121,7 +168,11 @@ async function createTemplateAndLinkMovies(
   movieIds: number[]
 ) {
   const res = await client.query(
-    `INSERT INTO tierlist_templates (title, description) VALUES ($1, $2) RETURNING id`,
+    `--sql
+    INSERT INTO tierlist_templates (title, description)
+    VALUES ($1, $2)
+    RETURNING id
+    `,
     [
       `Filmography: ${directorName}`,
       `Rank all films directed by ${directorName}.`,
@@ -129,12 +180,17 @@ async function createTemplateAndLinkMovies(
   );
   const templateId = res.rows[0].id;
 
-  for (const movieId of movieIds) {
-    await client.query(
-      `INSERT INTO template_movies (template_id, movie_id) VALUES ($1, $2)`,
-      [templateId, movieId]
-    );
+  if (movieIds.length > 0) {
+    const templateMovieValues = movieIds.map((movieId) => [templateId, movieId]);
+    const placeholders = buildBulkInsertPlaceholders(templateMovieValues.length, 2);
+    const insertQuery = `--sql
+      INSERT INTO template_movies (template_id, movie_id)
+      VALUES ${placeholders}
+      ON CONFLICT (template_id, movie_id) DO NOTHING
+    `;
+    await client.query(insertQuery, templateMovieValues.flat());
   }
+
   console.log(
     `--- Created template for ${directorName} and linked ${movieIds.length} movies ---`
   );

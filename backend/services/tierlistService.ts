@@ -7,107 +7,85 @@ interface RankedItemInput {
 }
 
 /**
- * Fetches a list of all available tierlist templates with sorting and filtering.
- * @param userId - The ID of the currently authenticated user.
- * @param sortBy - The sorting criteria ('title' or 'createdAt').
- * @param filter - The filter criteria ('all', 'ranked', or 'unranked').
+ * Fetch all tierlist templates with optional sorting and filtering.
  */
 export async function getAllTemplates(
   userId: number,
-  sortBy: string = "title",
-  filter: string = "all"
+  sortBy: "title" | "createdAt",
+  filter: "all" | "ranked" | "unranked",
+  limit: number,
+  offset: number
 ) {
-  let orderByClause = "ORDER BY tt.title ASC";
-  if (sortBy === "createdAt") {
-    orderByClause = "ORDER BY tt.created_at DESC";
-  }
+  const sortColumn = sortBy === "createdAt" ? "ur.updated_at" : "tt.title";
+  const sortDirection = sortBy === "createdAt" ? "DESC" : "ASC";
 
-  let whereClause = "";
-  const queryParams: (number | string)[] = [userId];
+  const whereClause =
+    filter === "ranked"
+      ? "WHERE ur.id IS NOT NULL"
+      : filter === "unranked"
+      ? "WHERE ur.id IS NULL"
+      : "";
 
-  if (filter === "ranked") {
-    whereClause = "WHERE ur.id IS NOT NULL";
-  } else if (filter === "unranked") {
-    whereClause = "WHERE ur.id IS NULL";
-  }
-
-  const query = `
+  const query = `--sql
     SELECT
-        tt.id,
-        tt.title,
-        tt.description,
-        CASE WHEN ur.id IS NOT NULL THEN true ELSE false END AS "isRanked"
-    FROM
-        tierlist_templates tt
-    LEFT JOIN
-        user_rankings ur ON tt.id = ur.template_id AND ur.user_id = $1
+      tt.id,
+      tt.title,
+      tt.description,
+      (ur.id IS NOT NULL) AS "isRanked",
+      ur.updated_at AS "updatedAt"
+    FROM tierlist_templates tt
+    LEFT JOIN user_rankings ur
+      ON tt.id = ur.template_id AND ur.user_id = $1
     ${whereClause}
-    ${orderByClause}
+    ORDER BY ${sortColumn} ${sortDirection} NULLS LAST
+    LIMIT $2 OFFSET $3
   `;
 
-  const { rows } = await pool.query(query, queryParams);
+  const { rows } = await pool.query(query, [userId, limit, offset]);
   return rows;
 }
 
 /**
- * Fetches a specific tierlist, returning user's ranking or the template.
- * This is more efficient as it uses a single, powerful query with conditional aggregation.
- * @param tierlistId - The ID of the tierlist template.
- * @param userId - The ID of the currently authenticated user.
+ * Fetch a single tierlist template and its movies, including user's ranking.
  */
 export async function getTierlistById(tierlistId: number, userId: number) {
-  const query = `
-    SELECT
-        tt.id,
-        tt.title,
-        tt.description,
-        ur.id IS NOT NULL AS "isRanked",
-        -- Aggregate ranked items into a JSON array if a ranking exists
-        CASE WHEN ur.id IS NOT NULL THEN
-            (SELECT json_agg(json_build_object('movieId', ri.movie_id, 'tier', ri.tier, 'title', m.title, 'poster_path', m.poster_path))
-             FROM ranked_items ri
-             JOIN movies m ON ri.movie_id = m.id
-             WHERE ri.ranking_id = ur.id)
-        ELSE NULL END AS "rankedItems",
-        -- Aggregate template movies into a JSON array if no ranking exists
-        CASE WHEN ur.id IS NULL THEN
-            (SELECT json_agg(json_build_object('id', m.id, 'title', m.title, 'poster_path', m.poster_path))
-             FROM template_movies tm
-             JOIN movies m ON tm.movie_id = m.id
-             WHERE tm.template_id = tt.id)
-        ELSE NULL END AS "movies"
-    FROM
-        tierlist_templates tt
-    LEFT JOIN
-        user_rankings ur ON tt.id = ur.template_id AND ur.user_id = $2
-    WHERE
-        tt.id = $1
-    GROUP BY
-        tt.id, ur.id;
-  `;
-
-  const { rows } = await pool.query(query, [tierlistId, userId]);
-
-  if (rows.length === 0) {
+  const templateRes = await pool.query(
+    `SELECT id, title, description FROM tierlist_templates WHERE id = $1`,
+    [tierlistId]
+  );
+  if (!templateRes.rows.length)
     throw new ApiError("Tierlist template not found.", 404);
-  }
 
-  // The aggregated JSON might be null if no items exist, default to an empty array.
-  const result = rows[0];
-  if (result.isRanked) {
-    result.rankedItems = result.rankedItems || [];
-  } else {
-    result.movies = result.movies || [];
-  }
+  const template = templateRes.rows[0];
 
-  return result;
+  const moviesRes = await pool.query(
+    `--sql
+    SELECT
+      m.id,
+      m.title,
+      m.poster_path,
+      m.release_year,
+      ri.tier
+    FROM template_movies tm
+    JOIN movies m ON tm.movie_id = m.id
+    LEFT JOIN user_rankings ur
+      ON ur.template_id = tm.template_id AND ur.user_id = $2
+    LEFT JOIN ranked_items ri
+      ON ri.ranking_id = ur.id AND ri.movie_id = m.id
+    WHERE tm.template_id = $1
+  `,
+    [tierlistId, userId]
+  );
+
+  return {
+    ...template,
+    movies: moviesRes.rows,
+    isRanked: moviesRes.rows.some((row) => row.tier !== null),
+  };
 }
 
 /**
- * Saves or updates a user's ranking for a tierlist within a transaction.
- * @param userId - The ID of the user saving the ranking.
- * @param templateId - The ID of the tierlist template being ranked.
- * @param rankedItems - An array of objects with movieId and tier.
+ * Save or update user's ranking for a tierlist.
  */
 export async function saveUserRanking(
   userId: number,
@@ -118,34 +96,50 @@ export async function saveUserRanking(
   try {
     await client.query("BEGIN");
 
-    // Upsert the user_ranking record and get its ID.
-    const rankingResult = await client.query(
-      `INSERT INTO user_rankings (user_id, template_id) VALUES ($1, $2)
-       ON CONFLICT (user_id, template_id) DO UPDATE SET created_at = NOW()
-       RETURNING id`,
+    // Verify that the template exists before proceeding
+    const templateCheck = await client.query(
+      `--sql SELECT id FROM tierlist_templates WHERE id = $1`,
+      [templateId]
+    );
+    if (templateCheck.rows.length === 0) {
+      throw new ApiError("Tierlist template not found.", 404);
+    }
+
+    const {
+      rows: [ranking],
+    } = await client.query(
+      `--sql
+      INSERT INTO user_rankings (user_id, template_id)
+      VALUES ($1, $2)
+      ON CONFLICT (user_id, template_id)
+      DO UPDATE SET updated_at = NOW()
+      RETURNING id
+    `,
       [userId, templateId]
     );
-    const rankingId = rankingResult.rows[0].id;
 
-    // Clear any previous items for this ranking to handle updates correctly.
-    await client.query("DELETE FROM ranked_items WHERE ranking_id = $1", [
-      rankingId,
-    ]);
+    // Atomically delete old items and insert new ones
+    await client.query(
+      `--sql DELETE FROM ranked_items WHERE ranking_id = $1`,
+      [ranking.id]
+    );
 
-    // Insert all new ranked items.
-    // This can be further optimized with a single multi-row INSERT statement.
-    for (const item of rankedItems) {
-      await client.query(
-        "INSERT INTO ranked_items (ranking_id, movie_id, tier) VALUES ($1, $2, $3)",
-        [rankingId, item.movieId, item.tier]
-      );
+    if (rankedItems.length) {
+      const insertQuery = `--sql
+        INSERT INTO ranked_items (ranking_id, movie_id, tier)
+        SELECT $1, movie_id, tier
+        FROM UNNEST($2::int[], $3::int[]) AS t(movie_id, tier)
+      `;
+      const movieIds = rankedItems.map((item) => item.movieId);
+      const tiers = rankedItems.map((item) => item.tier);
+      await client.query(insertQuery, [ranking.id, movieIds, tiers]);
     }
 
     await client.query("COMMIT");
     return { message: "Ranking saved successfully." };
-  } catch (error) {
+  } catch (e) {
     await client.query("ROLLBACK");
-    throw error; // Re-throw to be caught by the controller's error handler
+    throw e;
   } finally {
     client.release();
   }
