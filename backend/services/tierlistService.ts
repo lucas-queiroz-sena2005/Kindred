@@ -1,5 +1,6 @@
 import pool from "../db/db.js";
 import { ApiError } from "../errors/customErrors.js";
+import { recalculateProfileVector } from './vectorService.js';
 
 interface RankedItemInput {
   movieId: number;
@@ -136,6 +137,9 @@ export async function saveUserRanking(
     }
 
     await client.query("COMMIT");
+
+    await recalculateProfileVector(userId);
+    
     return { message: "Ranking saved successfully." };
   } catch (e) {
     await client.query("ROLLBACK");
