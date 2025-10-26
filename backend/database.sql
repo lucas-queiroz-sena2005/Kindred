@@ -2,19 +2,20 @@
 -- Core user and content schema for movie tierlist platform
 -- ==========================================================
 
-CREATE EXTENSION vector;
-
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    profile_vector vector(256) NOT NULL,
+    profile_vector vector(256) NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX ON users
+USING ivfflat (profile_vector vector_cosine_ops)
+WITH (lists = 100);
 
 -- ----------------------------------------------------------
 

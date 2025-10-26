@@ -107,14 +107,15 @@ export async function saveRanking(
   next: NextFunction
 ) {
   const userId = req.user!.id;
-  const { templateId, rankedItems } = req.body; // rankedItems: [{ movieId, tier }]
+  const templateId = parseInt(req.params.templateId, 10);
+  const { rankedItems } = req.body; // rankedItems: [{ movieId, tier }]
 
-  if (!templateId || !Array.isArray(rankedItems)) {
+  if (isNaN(templateId) || !Array.isArray(rankedItems)) {
     return res.status(400).json({ message: "Invalid request body." });
   }
 
   try {
-    const result = await tierlistService.saveUserRanking(
+    const result = await tierlistService.saveUserRanking( // No change needed here
       userId,
       templateId,
       rankedItems
