@@ -26,4 +26,8 @@ export interface TierListSummary extends Omit<TierListData, "movies"> {
   updatedAt: string | null; // The date the user last ranked it
 }
 
+/**
+ * Represents the complete state of a tier list, including all ranked tiers
+ * and a dedicated tier for unranked items. The keys are tier IDs (e.g., "S", "A", "unranked").
+ */
 export type TierState = Record<string, Tier>;

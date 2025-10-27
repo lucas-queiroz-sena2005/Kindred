@@ -5,8 +5,7 @@ import type {
   User,
 } from "./types/auth";
 import type {
-  TierListData as TierListDataType, // Renamed to avoid conflict with local type
-  TierState,
+  TierListData,
   TierListSummary,
 } from "./types/tierlist";
 
@@ -72,16 +71,6 @@ async function getTierlistList(
   });
   return response.data;
 }
-
-/**
- * The data structure returned when fetching a single tierlist.
- * It includes the base template info and either the user's ranked tiers
- * or the unranked movies if the user hasn't ranked it yet.
- */
-export type TierListData = Omit<TierListDataType, "movies"> & {
-  rankedTiers: TierState | null; // User's rankings if they exist
-  unrankedMovies: TierListDataType["movies"]; // Movies to be ranked
-};
 
 /**
  * Fetches a single tierlist by its ID.
