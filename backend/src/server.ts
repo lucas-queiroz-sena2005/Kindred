@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { Request, Response, NextFunction, Express } from "express";
 import pool from "../db/db.js";
 import apiRoutes from "../routes/index.js";
+import { ApiError } from "../errors/customErrors.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -20,14 +21,25 @@ app.use(cookieParser())
 app.use(express.static("public"));
 app.use("/api", apiRoutes);
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error("🔴 An unhandled error occurred:", err.stack);
+  console.error("🔴 Error caught by global handler:", err.stack);
 
+  // Handle custom API errors
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({
+      error: err.name,
+      message: err.message,
+    });
+  }
+
+  // Handle JSON parsing errors from body-parser
   if (err instanceof SyntaxError && "body" in err) {
     return res.status(400).json({
       error: "Bad Request",
       message: "The request body contains malformed JSON.",
     });
   }
+
+  // Fallback for all other errors
   res.status(500).json({
     error: "Internal Server Error",
     message: "An unexpected error occurred on the server.",

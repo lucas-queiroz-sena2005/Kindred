@@ -11,6 +11,6 @@ tierListRouter.get("/list", getTierlistList);
 
 tierListRouter.get("/:tierlistId", getTierList);
 
-tierListRouter.post("/", saveRanking);
+tierListRouter.post("/:templateId", saveRanking);
 
 export default tierListRouter;
