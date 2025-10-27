@@ -2,11 +2,9 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { TierList } from "../features/tierlist/components/TierList";
-import type { TierListTemplateData } from "../types/tierlist";
+import type { TierListData } from "../types/tierlist";
 
-async function fetchTemplate(
-  templateId: string
-): Promise<TierListTemplateData> {
+async function fetchTemplate(templateId: string): Promise<TierListData> {
   const response = await fetch(`/api/templates/${templateId}`);
   if (!response.ok) {
     throw new Error("Network response was not ok");
@@ -17,10 +15,7 @@ async function fetchTemplate(
 function TierListPage(): React.ReactElement {
   const { templateId } = useParams();
 
-  const { data, isLoading, isError, error } = useQuery<
-    TierListTemplateData,
-    Error
-  >({
+  const { data, isLoading, isError, error } = useQuery<TierListData, Error>({
     queryKey: ["template", templateId],
     queryFn: () => fetchTemplate(templateId!),
     enabled: !!templateId,
