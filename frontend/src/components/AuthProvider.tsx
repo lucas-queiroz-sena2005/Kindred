@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { checkAuthStatus, loginUser, logoutUser, registerUser } from "../api";
+import { api } from "../api";
 import type {
   LoginCredentials,
   RegisterCredentials,
@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Verify user session on initial load
     const verifyInitialSession = async () => {
       try {
-        const authData = await checkAuthStatus();
+        const authData = await api.auth.checkStatus();
         if (authData && authData.user) {
           setUser(authData.user);
         }
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function handleLogin(credentials: LoginCredentials): Promise<void> {
     try {
-      const user = await loginUser(credentials);
+      const user = await api.auth.login(credentials);
       setUser(user);
     } catch (error) {
       throw error;
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function handleLogout(): Promise<void> {
     try {
-      await logoutUser();
+      await api.auth.logout();
       setUser(null);
     } catch (error) {
       throw error;
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     credentials: RegisterCredentials
   ): Promise<any> {
     try {
-      return await registerUser(credentials);
+      return await api.auth.register(credentials);
     } catch (error) {
       throw error;
     }

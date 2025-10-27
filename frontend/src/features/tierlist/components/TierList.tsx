@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { TierListDnD } from "../../../components/TierListDnD";
-import { TierListTap } from "../../../components/TierListTap";
-import type { TierListData } from "../../../types/tierlist";
+// import { TierListDnD } from "../../../components/TierListDnD";
+// import { TierListTap } from "../../../components/TierListTap";
+import type { TierState, TierListData } from "../../../types/tierlist";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 
 type InteractionMode = "auto" | "drag" | "tap";
@@ -29,11 +29,11 @@ export function TierList({ templateData, isLoading }: TierListProps) {
         ))}
       </div>
 
-      {mode === "drag" || (mode === "auto" && isDesktop) ? (
+       {/* {mode === "drag" || (mode === "auto" && isDesktop) ? (
         <TierListDnD templateData={templateData} />
       ) : (
         <TierListTap templateData={templateData} />
-      )}
+      )} */}
     </>
   );
 }

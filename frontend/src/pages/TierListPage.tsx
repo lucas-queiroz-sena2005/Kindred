@@ -1,29 +1,32 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { TierList } from "../features/tierlist/components/TierList";
+import { api } from "../api";
 import type { TierListData } from "../types/tierlist";
 
-async function fetchTemplate(templateId: string): Promise<TierListData> {
-  const response = await fetch(`/api/templates/${templateId}`);
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
-  }
-  return await response.json();
-}
-
 function TierListPage(): React.ReactElement {
-  const { templateId } = useParams();
+  const { id } = useParams();
+  const tierlistId = id ? parseInt(id, 10) : undefined;
 
-  const { data, isLoading, isError, error } = useQuery<TierListData, Error>({
-    queryKey: ["template", templateId],
-    queryFn: () => fetchTemplate(templateId!),
-    enabled: !!templateId,
+  const { data , isLoading, isError, error } = useQuery<TierListData, Error>({
+    queryKey: ["tierlist", tierlistId],
+    queryFn: () => api.tierlists.getById(tierlistId!),
+    enabled: !!tierlistId && !isNaN(tierlistId),
   });
 
-  if (!templateId) {
+  
+  useEffect(() => {
+    if (data) {
+      console.log("Tierlist data fetched:", data);
+    }
+  }, [data]);
+
+  if (!tierlistId || isNaN(tierlistId)) {
     return (
-      <p className="text-center py-8 text-red-500">No template ID provided.</p>
+      <p className="text-center py-8 text-red-500">
+        Invalid or no tierlist ID provided.
+      </p>
     );
   }
 
