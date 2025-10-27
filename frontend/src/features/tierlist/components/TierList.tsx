@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { TierListDnD } from "../../../components/TierListDnD";
 import { TierListTap } from "../../../components/TierListTap";
-import type { TierListTemplateData } from "../../../types/tierlist";
+import type { TierListData } from "../../../types/tierlist";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 
 type InteractionMode = "auto" | "drag" | "tap";
 const MODES: InteractionMode[] = ["auto", "drag", "tap"];
 
 interface TierListProps {
-  templateData: TierListTemplateData | undefined;
+  templateData: TierListData | undefined;
   isLoading: boolean;
 }
 

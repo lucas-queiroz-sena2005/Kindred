@@ -10,11 +10,20 @@ export interface Tier {
   items: Movie[];
 }
 
-export interface TierListTemplateData {
+export interface TierListData {
   id: number;
   title: string;
   description: string;
   movies: Movie[];
+}
+
+/**
+ * Represents a summary of a tierlist, used in list views.
+ * It omits heavier fields like `movies` and adds user-specific metadata.
+ */
+export interface TierListSummary extends Omit<TierListData, "movies"> {
+  isRanked: boolean;
+  updatedAt: string | null; // The date the user last ranked it
 }
 
 export type TierState = Record<string, Tier>;
