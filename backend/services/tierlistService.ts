@@ -93,13 +93,24 @@ export async function saveUserRanking(
   templateId: number,
   rankedItems: RankedItemInput[]
 ) {
+  // --- Input Validation ---
+  // Ensure every item in the array is valid before starting a transaction.
+  for (const item of rankedItems) {
+    if (
+      typeof item.movieId !== "number" ||
+      typeof item.tier !== "number" ||
+      item.tier < 0 || item.tier > 5
+    ) {
+      throw new ApiError("Invalid 'rankedItems' payload. Each item must have a numeric 'movieId' and a 'tier' between 0 and 5.", 400);
+    }
+  }
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // Verify that the template exists before proceeding
     const templateCheck = await client.query(
-      `--sql SELECT id FROM tierlist_templates WHERE id = $1`,
+      `--sql
+      SELECT id FROM tierlist_templates WHERE id = $1`,
       [templateId]
     );
     if (templateCheck.rows.length === 0) {
@@ -119,9 +130,9 @@ export async function saveUserRanking(
       [userId, templateId]
     );
 
-    // Atomically delete old items and insert new ones
     await client.query(
-      `--sql DELETE FROM ranked_items WHERE ranking_id = $1`,
+      `--sql
+      DELETE FROM ranked_items WHERE ranking_id = $1`,
       [ranking.id]
     );
 
@@ -139,10 +150,13 @@ export async function saveUserRanking(
     await client.query("COMMIT");
 
     await recalculateProfileVector(userId);
-    
     return { message: "Ranking saved successfully." };
   } catch (e) {
-    await client.query("ROLLBACK");
+    // If a query in the transaction fails, the client might no longer be queryable.
+    // This check prevents a noisy "bind message" error in the logs if the connection is lost.
+    // @ts-ignore - _queryable is not in the official types but is a reliable internal flag.
+    if (client && client._queryable) await client.query("ROLLBACK");
+
     throw e;
   } finally {
     client.release();

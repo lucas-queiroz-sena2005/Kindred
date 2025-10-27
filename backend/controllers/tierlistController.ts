@@ -1,5 +1,6 @@
 import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
+import { ApiError } from "../errors/customErrors.js";
 import * as tierlistService from "../services/tierlistService.js";
 
 /**
@@ -86,6 +87,10 @@ export async function getTierList(
   const userId = req.user!.id;
   const tierlistId = parseInt(req.params.tierlistId, 10);
 
+  if (isNaN(tierlistId)) {
+    return next(new ApiError("Tierlist ID must be a valid number.", 400));
+  }
+
   try {
     const tierlistData = await tierlistService.getTierlistById(
       tierlistId,
@@ -110,12 +115,16 @@ export async function saveRanking(
   const templateId = parseInt(req.params.templateId, 10);
   const { rankedItems } = req.body; // rankedItems: [{ movieId, tier }]
 
-  if (isNaN(templateId) || !Array.isArray(rankedItems)) {
-    return res.status(400).json({ message: "Invalid request body." });
-  }
-
   try {
-    const result = await tierlistService.saveUserRanking( // No change needed here
+    // Validate inputs before passing to the service
+    if (isNaN(templateId)) {
+      throw new ApiError("Template ID must be a valid number.", 400);
+    }
+    if (!Array.isArray(rankedItems)) {
+      throw new ApiError("Request body must include a 'rankedItems' array.", 400);
+    }
+
+    const result = await tierlistService.saveUserRanking(
       userId,
       templateId,
       rankedItems
