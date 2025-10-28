@@ -66,7 +66,7 @@ export interface GetTierlistListParams {
 async function getTierlistList(
   params: GetTierlistListParams = {}
 ): Promise<TierListSummary[]> {
-  const response = await axiosInstance.get<TierListSummary[]>("/tierlists", {
+  const response = await axiosInstance.get<TierListSummary[]>("/tierlist", {
     params,
   });
   return response.data;
@@ -79,7 +79,7 @@ async function getTierlistList(
  * @param tierlistId - The ID of the tierlist to fetch.
  */
 async function getTierlist(tierlistId: number): Promise<TierListData> {
-  const response = await axiosInstance.get<TierListData>(`/tierlists/${tierlistId}`);
+  const response = await axiosInstance.get<TierListData>(`/tierlist/${tierlistId}`);
   return response.data;
 }
 
