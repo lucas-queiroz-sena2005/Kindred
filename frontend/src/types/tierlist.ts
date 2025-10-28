@@ -4,6 +4,14 @@ export interface Movie {
   poster_path: string | null;
 }
 
+/**
+ * Represents a movie within a specific tierlist response, which may include
+ * the tier it has been ranked in.
+ */
+export interface RankedMovie extends Movie {
+  tier: number | null;
+}
+
 export interface Tier {
   id: string;
   title: string;
@@ -14,7 +22,7 @@ export interface TierListData {
   id: number;
   title: string;
   description: string;
-  movies: Movie[];
+  movies: RankedMovie[];
 }
 
 /**
