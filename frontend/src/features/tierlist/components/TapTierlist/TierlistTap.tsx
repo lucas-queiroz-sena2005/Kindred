@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import type { TierState, Movie } from "../../../types/tierlist";
-import { TIER_ORDER, TIERS, UNRANKED_TIER } from "../constants/tier-constants";
+import type { TierState, Movie } from "../../../../types/tierlist";
+import { TIER_ORDER, TIERS, UNRANKED_TIER } from "../../constants/tier-constants";
 import SimpleTierRow from "./SimpleTierRow";
 import RankMovieModal from "./RankMovieModal";
 import TappableMovieItem from "./TappableMovieItem"; // Import the new component

@@ -1,6 +1,6 @@
 import React from "react";
-import type { Movie } from "../../../types/tierlist";
-import { TIERS } from "../constants/tier-constants";
+import type { Movie } from "../../../../types/tierlist";
+import { TIERS } from "../../constants/tier-constants";
 
 interface RankMovieModalProps {
   movie: Movie | null;

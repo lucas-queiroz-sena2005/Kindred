@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import TierlistDnd from "./TierlistDnd";
-import TierlistTap from "./TierlistTap";
+import TierlistDnd from "./DndTierlist/TierlistDnd";
+import TierlistTap from "./TapTierlist/TierlistTap";
 import type { TierState, TierListData } from "../../../types/tierlist";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { transformToTierState } from "../util/tierlist-transformer";
@@ -59,7 +59,15 @@ export function TierList({ templateData, isLoading }: TierListProps) {
         <TierlistDnd tierState={tierState} setTierState={setTierState} />
       )}
       {effectiveMode === "tap" && (
-        <TierlistTap tierState={tierState} setTierState={setTierState} />
+        <TierlistTap
+          tierState={tierState}
+          setTierState={(updater) => {
+            // We wrap the original setTierState to ensure the updater function
+            // inside TierlistTap never receives an undefined state.
+            // The check for `!s` handles the type mismatch.
+            setTierState((s) => (s ? updater(s) : s));
+          }}
+        />
       )}
 
       <div>

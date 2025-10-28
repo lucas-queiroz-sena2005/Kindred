@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
-import type { TierState } from "../../../types/tierlist";
-import { arrayMove, arrayTransfer } from "../util/helpersDnd";
+import type { TierState } from "../../../../types/tierlist";
+import { arrayMove, arrayTransfer } from "../../util/helpersDnd";
 import TierDnd from "./TierDnd";
-import { TIER_ORDER } from "../constants/tier-constants";
+import { TIER_ORDER } from "../../constants/tier-constants";
 
 interface TierlistDndProps {
   tierState: TierState;

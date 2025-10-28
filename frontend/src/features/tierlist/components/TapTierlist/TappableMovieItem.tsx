@@ -1,5 +1,5 @@
 import React from "react";
-import type { Movie } from "../../../types/tierlist";
+import type { Movie } from "../../../../types/tierlist";
 
 interface TappableMovieItemProps {
   movie: Movie;
