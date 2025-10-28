@@ -1,8 +1,11 @@
-import React, { useState } from "react";
-// import { TierListDnD } from "../../../components/TierListDnD";
-// import { TierListTap } from "../../../components/TierListTap";
+import React, { useState, useEffect } from "react";
+import TierlistDnd from "./TierlistDnd";
+import TierlistTap from "./TierlistTap";
 import type { TierState, TierListData } from "../../../types/tierlist";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { transformToTierState } from "../util/tierlist-transformer";
+// You will need to create this file with the helper functions
+// import { arrayMove, arrayTransfer } from "../util/helpersDnd";
 
 type InteractionMode = "auto" | "drag" | "tap";
 const MODES: InteractionMode[] = ["auto", "drag", "tap"];
@@ -15,25 +18,54 @@ interface TierListProps {
 export function TierList({ templateData, isLoading }: TierListProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [mode, setMode] = useState<InteractionMode>("auto");
+  const [tierState, setTierState] = useState<TierState | undefined>();
 
-  if (isLoading) return <div className="text-center py-8">Loading tier list...</div>;
-  if (!templateData) return <div className="text-center py-8 text-red-500">Tier list template not found.</div>;
+  useEffect(() => {
+    if (templateData) {
+      const transformedData = transformToTierState(templateData);
+      setTierState(transformedData);
+    }
+  }, [templateData]);
+
+  if (isLoading)
+    return <div className="text-center py-8">Loading tier list...</div>;
+  if (!tierState)
+    return (
+      <div className="text-center py-8 text-red-500">
+        Tier list template not found.
+      </div>
+    );
+
+  // Determine the effective interaction mode based on user selection and screen size.
+  const effectiveMode = mode === "auto" ? (isDesktop ? "drag" : "tap") : mode;
 
   return (
     <>
       <div className="mode-switcher mb-4">
         {MODES.map((m) => (
-          <button key={m} onClick={() => setMode(m)}>
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            className={`px-4 py-2 rounded ${
+              mode === m ? "bg-blue-600 text-white" : "bg-gray-200"
+            }`}
+          >
             {m.charAt(0).toUpperCase() + m.slice(1)}
           </button>
         ))}
       </div>
 
-       {/* {mode === "drag" || (mode === "auto" && isDesktop) ? (
-        <TierListDnD templateData={templateData} />
-      ) : (
-        <TierListTap templateData={templateData} />
-      )} */}
+      {effectiveMode === "drag" && (
+        <TierlistDnd tierState={tierState} setTierState={setTierState} />
+      )}
+      {effectiveMode === "tap" && (
+        <TierlistTap tierState={tierState} setTierState={setTierState} />
+      )}
+
+      <div>
+        <button>Cancel</button>
+        <button>Save</button>
+      </div>
     </>
   );
 }

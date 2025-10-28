@@ -9,13 +9,12 @@ function TierListPage(): React.ReactElement {
   const { id } = useParams();
   const tierlistId = id ? parseInt(id, 10) : undefined;
 
-  const { data , isLoading, isError, error } = useQuery<TierListData, Error>({
+  const { data, isLoading, isError, error } = useQuery<TierListData, Error>({
     queryKey: ["tierlist", tierlistId],
     queryFn: () => api.tierlists.getById(tierlistId!),
     enabled: !!tierlistId && !isNaN(tierlistId),
   });
 
-  
   useEffect(() => {
     if (data) {
       console.log("Tierlist data fetched:", data);
