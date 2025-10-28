@@ -1,7 +1,7 @@
 import { Droppable } from "@hello-pangea/dnd";
 import DataCard from "./Datacard";
-import type { Tier } from "../../../types/tierlist";
-import { TIERS, UNRANKED_TIER } from "../constants/tier-constants";
+import type { Tier } from "../../../../types/tierlist";
+import { TIERS, UNRANKED_TIER } from "../../constants/tier-constants";
 
 const TIER_METADATA_MAP = Object.fromEntries([...TIERS, UNRANKED_TIER].map(t => [t.id, t]));
 

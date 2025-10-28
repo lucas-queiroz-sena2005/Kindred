@@ -1,6 +1,6 @@
 import React from "react";
-import type { Movie, Tier } from "../../../types/tierlist";
-import { TIERS, UNRANKED_TIER } from "../constants/tier-constants";
+import type { Movie, Tier } from "../../../../types/tierlist";
+import { TIERS, UNRANKED_TIER } from "../../constants/tier-constants";
 import TappableMovieItem from "./TappableMovieItem";
 
 interface SimpleTierRowProps {
