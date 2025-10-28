@@ -31,12 +31,17 @@ export const UNRANKED_TIER: TierDefinition = {
 /**
  * An array of all tier IDs in their intended display order.
  */
-export const TIER_ORDER: string[] = [...TIERS.map((t) => t.id), UNRANKED_TIER.id];
+export const TIER_ORDER: string[] = [
+  ...TIERS.map((t) => t.id),
+  UNRANKED_TIER.id,
+];
 
 /**
  * Maps numeric tier value from the API (e.g., 0) to the string ID (e.g., "S").
  */
-export const API_TIER_ID_MAP: Record<number, string> = Object.fromEntries(TIERS.map((t, i) => [i, t.id]));
+export const API_TIER_ID_MAP: Record<number, string> = Object.fromEntries(
+  TIERS.map((t, i) => [i, t.id])
+);
 
 /**
  * The base URL for TMDB poster images.

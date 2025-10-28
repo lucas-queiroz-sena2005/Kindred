@@ -4,8 +4,6 @@ import TierlistTap from "./TapTierlist/TierlistTap";
 import type { TierState, TierListData } from "../../../types/tierlist";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { transformToTierState } from "../util/tierlist-transformer";
-// You will need to create this file with the helper functions
-// import { arrayMove, arrayTransfer } from "../util/helpersDnd";
 
 type InteractionMode = "auto" | "drag" | "tap";
 const MODES: InteractionMode[] = ["auto", "drag", "tap"];
@@ -15,7 +13,10 @@ interface TierListProps {
   isLoading: boolean;
 }
 
-export function TierList({ templateData, isLoading }: TierListProps) {
+export function TierList({
+  templateData,
+  isLoading,
+}: TierListProps): React.ReactElement {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [mode, setMode] = useState<InteractionMode>("auto");
   const [tierState, setTierState] = useState<TierState | undefined>();

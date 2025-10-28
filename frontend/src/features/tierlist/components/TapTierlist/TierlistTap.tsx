@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import type { TierState, Movie } from "../../../../types/tierlist";
-import { TIER_ORDER, TIERS, UNRANKED_TIER } from "../../constants/tier-constants";
+import { TIER_ORDER } from "../../constants/tier-constants";
 import SimpleTierRow from "./SimpleTierRow";
 import RankMovieModal from "./RankMovieModal";
-import TappableMovieItem from "./TappableMovieItem"; // Import the new component
 
 // Define the map outside the component so it's created only once for efficiency.
 interface TierlistTapProps {
@@ -14,11 +13,8 @@ interface TierlistTapProps {
 export default function TierlistTap({
   tierState,
   setTierState,
-}: TierlistTapProps) {
+}: TierlistTapProps): React.ReactElement {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-
-  // Map for quick lookup of tier metadata (color, title)
-  const TIER_METADATA_MAP = Object.fromEntries([...TIERS, UNRANKED_TIER].map(t => [t.id, t]));
 
   /**
    * Moves the selected movie from its current tier to the destination tier.
@@ -31,19 +27,11 @@ export default function TierlistTap({
       // Deep copy to avoid direct state mutation
       const newState = JSON.parse(JSON.stringify(current)) as TierState;
 
-      // Find the movie's current tier and remove it
-      let foundAndRemoved = false;
-      for (const tierId of TIER_ORDER) {
-        if (newState[tierId]) {
-          const initialLength = newState[tierId].items.length;
-          newState[tierId].items = newState[tierId].items.filter(
-            (m) => m.id !== selectedMovie.id
-          );
-          if (newState[tierId].items.length < initialLength) {
-            foundAndRemoved = true;
-            break; // Movie found and removed, no need to check other tiers
-          }
-        }
+      // Remove the movie from whichever tier it's currently in.
+      for (const tierId in newState) {
+        newState[tierId].items = newState[tierId].items.filter(
+          (m) => m.id !== selectedMovie.id
+        );
       }
 
       // Add the movie to the destination tier
