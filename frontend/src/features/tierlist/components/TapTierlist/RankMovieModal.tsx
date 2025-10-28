@@ -8,7 +8,11 @@ interface RankMovieModalProps {
   onRank: (tierId: string) => void;
 }
 
-export default function RankMovieModal({ movie, onClose, onRank }: RankMovieModalProps) {
+export default function RankMovieModal({
+  movie,
+  onClose,
+  onRank,
+}: RankMovieModalProps): React.ReactElement | null {
   if (!movie) {
     return null;
   }
@@ -22,7 +26,9 @@ export default function RankMovieModal({ movie, onClose, onRank }: RankMovieModa
         className="bg-gray-800 w-full max-w-md rounded-t-lg p-4"
         onClick={(e) => e.stopPropagation()} // Prevent modal from closing when clicking inside
       >
-        <h3 className="text-lg font-semibold text-white mb-4 text-center">Rank "{movie.title}"</h3>
+        <h3 className="text-lg font-semibold text-white mb-4 text-center">
+          Rank "{movie.title}"
+        </h3>
         <div className="grid grid-cols-3 gap-2">
           {TIERS.map((tier) => (
             <button

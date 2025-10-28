@@ -11,7 +11,7 @@ interface SimpleTierRowProps {
 // Define the map outside the component so it's created only once for efficiency.
 const TIER_METADATA_MAP = Object.fromEntries([...TIERS, UNRANKED_TIER].map(t => [t.id, t]));
 
-export default function SimpleTierRow({ tier, onSelectMovie }: SimpleTierRowProps) {
+export default function SimpleTierRow({ tier, onSelectMovie }: SimpleTierRowProps): React.ReactElement {
   const tierMetadata = TIER_METADATA_MAP[tier.id];
   const tierColorClass = tierMetadata?.colorClass || UNRANKED_TIER.colorClass; // Default to unranked color
 

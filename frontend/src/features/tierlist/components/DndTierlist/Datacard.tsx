@@ -6,7 +6,11 @@ interface DataCardProps {
   imageUrl: string;
 }
 
-export default function DataCard({ id, index, imageUrl }: DataCardProps) {
+export default function DataCard({
+  id,
+  index,
+  imageUrl,
+}: DataCardProps): React.ReactElement {
   return (
     <Draggable draggableId={id} index={index}>
       {(provided) => (
