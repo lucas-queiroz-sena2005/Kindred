@@ -10,8 +10,6 @@
 <a id="-english"></a>
 ## 🇬🇧 English
 
-## One-Liner Hook
-
 A full-stack web application that quantifies user "taste" and discovers compatible users through a feature-based vector similarity algorithm.
 
 -----
@@ -184,7 +182,6 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 ## 🇧🇷 Português
 
 ### Kindred (Versão em Português)
-## Resumo em Uma Linha
 
 Uma aplicação web full-stack que quantifica o "gosto" do usuário e descobre usuários compatíveis através de um algoritmo de similaridade de vetores baseado em características.
 
