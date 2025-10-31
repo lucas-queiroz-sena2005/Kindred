@@ -83,6 +83,16 @@ async function getTierlist(tierlistId: number): Promise<TierListData> {
   return response.data;
 }
 
+/**
+ * Saves a user's tierlist rankings.
+ * @param tierlist - The tierlist data, including the user's rankings.
+ * @returns A promise that resolves with a success message.
+ */
+async function saveTierlist(tierlist: TierListData): Promise<string> {
+  const response = await axiosInstance.post("/tierlist", tierlist);
+  return response.data;
+}
+
 // Grouped API methods for cleaner imports and usage
 export const api = {
   auth: {
@@ -94,5 +104,6 @@ export const api = {
   tierlists: {
     getList: getTierlistList,
     getById: getTierlist,
+    postTierlist: saveTierlist,
   },
 };
