@@ -57,7 +57,7 @@ export function transformToTierData(tierState: TierState, templateId: number): T
     .flatMap((tier) => {
       const apiTierValue = TIERS.findIndex((t) => t.id === tier.id);
       return tier.items.map((item) => ({
-        id: item.id,
+        movieId: item.id,
         tier: apiTierValue,
       }));
     });
