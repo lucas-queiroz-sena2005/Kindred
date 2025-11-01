@@ -6,6 +6,7 @@ import type {
 } from "./types/auth";
 import type {
   TierListData,
+  TierlistResponse,
   TierListSummary,
 } from "./types/tierlist";
 
@@ -88,8 +89,8 @@ async function getTierlist(tierlistId: number): Promise<TierListData> {
  * @param tierlist - The tierlist data, including the user's rankings.
  * @returns A promise that resolves with a success message.
  */
-async function saveTierlist(tierlist: TierListData): Promise<string> {
-  const response = await axiosInstance.post("/tierlist", tierlist);
+async function saveTierlist(tierlist: TierlistResponse): Promise<string> {
+  const response = await axiosInstance.post(`/tierlist/${tierlist.templateId}`, tierlist);
   return response.data;
 }
 

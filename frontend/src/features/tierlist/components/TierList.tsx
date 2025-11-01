@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import TierlistDnd from "./DndTierlist/TierlistDnd";
 import TierlistTap from "./TapTierlist/TierlistTap";
+import { useNavigate } from "react-router-dom";
 import type { TierState, TierListData } from "../../../types/tierlist";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
-import { transformToTierState } from "../util/tierlist-transformer";
+import { transformToTierState, transformToTierData } from "../util/tierlist-transformer";
+import { api } from "../../../api";
 
 type InteractionMode = "auto" | "drag" | "tap";
 const MODES: InteractionMode[] = ["auto", "drag", "tap"];
@@ -18,9 +20,10 @@ export function TierList({
   isLoading,
 }: TierListProps): React.ReactElement {
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const navigate = useNavigate();
   const [mode, setMode] = useState<InteractionMode>("auto");
   const [tierState, setTierState] = useState<TierState | undefined>();
-
+  const [savingStatus, setSavingStatus] = useState<"Save" | "Saving" | "Failed">("Save")
   useEffect(() => {
     if (templateData) {
       const transformedData = transformToTierState(templateData);
@@ -36,6 +39,23 @@ export function TierList({
         Tier list template not found.
       </div>
     );
+  
+  async function handleSave() {
+    if (!tierState || !templateData) {
+      setSavingStatus("Failed");
+      return;
+    }
+    setSavingStatus("Saving");
+    const transformedData = transformToTierData(tierState, templateData?.id);
+    api.tierlists.postTierlist(transformedData)
+      .then(() => {
+        setSavingStatus("Save");
+        navigate("/tierlists")
+      })
+      .catch(() => {
+        setSavingStatus("Failed");
+      })
+  }
 
   // Determine the effective interaction mode based on user selection and screen size.
   const effectiveMode = mode === "auto" ? (isDesktop ? "drag" : "tap") : mode;
@@ -73,7 +93,12 @@ export function TierList({
 
       <div>
         <button>Cancel</button>
-        <button>Save</button>
+        <button
+          onClick={handleSave}
+          disabled={savingStatus === "Saving"}
+        >
+          {savingStatus}
+        </button>
       </div>
     </>
   );

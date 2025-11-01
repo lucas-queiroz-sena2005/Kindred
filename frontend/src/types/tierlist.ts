@@ -38,4 +38,13 @@ export interface TierListSummary extends Omit<TierListData, "movies"> {
  * Represents the complete state of a tier list, including all ranked tiers
  * and a dedicated tier for unranked items. The keys are tier IDs (e.g., "S", "A", "unranked").
  */
+
+/**
+ * Represents the payload sent to the API when saving a user's ranking.
+ */
+export interface TierlistResponse {
+  rankedItems: { movieId: number; tier: number }[];
+  templateId: number;
+  
+}
 export type TierState = Record<string, Tier>;
