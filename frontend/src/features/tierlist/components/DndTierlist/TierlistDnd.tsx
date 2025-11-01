@@ -53,6 +53,7 @@ export default function TierlistDnd({
           newState[source.droppableId].items = newSourceItems;
           newState[destination.droppableId].items = newDestItems;
         }
+        console.log(newState)
         return newState;
       });
     },
