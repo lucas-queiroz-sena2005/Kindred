@@ -1,6 +1,7 @@
-import type { TierListData, TierState } from "../../../types/tierlist";
+import type { TierListData, TierState, TierlistResponse } from "../../../types/tierlist";
 import {
   TIER_ORDER,
+  TIERS,
   API_TIER_ID_MAP,
   TMDB_IMAGE_BASE_URL,
 } from "../constants/tier-constants";
@@ -40,4 +41,29 @@ export function transformToTierState(tierListData: TierListData): TierState {
   }
 
   return tierState;
+}
+
+/**
+ * Transforms a TierState object from the UI back into a flat structure
+ * suitable for sending to the API.
+ *
+ * @param tierState - The current state of the tiers from the UI.
+ * @param templateId - The ID of the tier list template.
+ * @returns A TierlistResponse object.
+ */
+export function transformToTierData(tierState: TierState, templateId: number): TierlistResponse {
+  const rankedItems = Object.values(tierState)
+    .filter((tier) => tier.id !== "unranked")
+    .flatMap((tier) => {
+      const apiTierValue = TIERS.findIndex((t) => t.id === tier.id);
+      return tier.items.map((item) => ({
+        id: item.id,
+        tier: apiTierValue,
+      }));
+    });
+
+  return {
+    rankedItems,
+    templateId,
+  };
 }

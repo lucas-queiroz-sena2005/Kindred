@@ -36,6 +36,7 @@ export default function TierlistTap({
 
       // Add the movie to the destination tier
       newState[destinationTierId].items.push(selectedMovie);
+      console.log(newState)
       return newState;
     });
 
