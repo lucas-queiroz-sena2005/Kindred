@@ -65,9 +65,9 @@ export interface GetTierlistListParams {
  * @param params - Optional query parameters for sorting, filtering, and pagination.
  */
 async function getTierlistList(
-  params: GetTierlistListParams = {}
+  params?: GetTierlistListParams
 ): Promise<TierListSummary[]> {
-  const response = await axiosInstance.get<TierListSummary[]>("/tierlist", {
+  const response = await axiosInstance.get<TierListSummary[]>("/tierlist/list", {
     params,
   });
   return response.data;
