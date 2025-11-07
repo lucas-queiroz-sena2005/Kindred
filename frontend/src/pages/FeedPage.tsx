@@ -3,6 +3,7 @@ import { api } from "../api";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useOnScrollToBottom } from "../hooks/useOnScrollToBottom";
 import { TemplateCard } from "../components/TemplateCard";
+import { TemplateCardSkeleton } from "../components/TemplateCardSkeleton";
 
 function FeedPage(): React.ReactElement {
   const PAGE_LIMIT = 10;
@@ -13,6 +14,7 @@ function FeedPage(): React.ReactElement {
     isFetchingNextPage,
     isLoading,
     isError,
+    isSuccess,
     error,
   } = useInfiniteQuery({
     queryKey: ["feedTemplates"],
@@ -34,26 +36,31 @@ function FeedPage(): React.ReactElement {
 
   const templates = data?.pages.flat() ?? [];
 
-  const showNoMoreTemplates =
-    !isLoading && !isFetchingNextPage && !hasNextPage && templates.length > 0;
+  const showEmptyState = isSuccess && templates.length === 0;
+  const showNoMoreResults =
+    isSuccess && !hasNextPage && !isFetchingNextPage && templates.length > 0;
 
   return (
     <>
       <h1 className="text-3xl font-bold mb-4">Feed</h1>
 
-      {isLoading && <p>Loading tierlists...</p>}
       {isError && <p className="text-red-500">Error: {error.message}</p>}
 
-      {templates.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map((template) => (
-            <TemplateCard key={template.id} {...template} />
-          ))}
-        </div>
+      {showEmptyState && (
+        <div>You haven't ranked any tierlists yet.</div>
       )}
 
-      {isFetchingNextPage && <div>Loading more...</div>}
-      {showNoMoreTemplates && <div>No more templates to show.</div>}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {isSuccess &&
+          templates.map((template) => (
+            <TemplateCard key={template.id} {...template} />
+          ))}
+
+        {(isLoading || isFetchingNextPage) &&
+          [...Array(isLoading ? 6 : 3)].map((_, i) => <TemplateCardSkeleton key={i} />)}
+      </div>
+
+      {showNoMoreResults && <div>No more tierlists to show.</div>}
     </>
   );
 }
