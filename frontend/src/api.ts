@@ -9,6 +9,7 @@ import type {
   TierlistResponse,
   TierListSummary,
 } from "./types/tierlist";
+import type { KinUser } from "./types/kin";
 
 const axiosInstance = axios.create({
   baseURL: "/api",
@@ -83,7 +84,10 @@ async function getTierlist(tierlistId: number): Promise<TierListData> {
   const response = await axiosInstance.get<TierListData>(`/tierlist/${tierlistId}`);
   return response.data;
 }
-
+async function getKin(): Promise<KinUser[]> {
+    const response = await axiosInstance.get<{ users: KinUser[] }>("/user/kin");
+    return response.data.users;
+}
 /**
  * Saves a user's tierlist rankings.
  * @param tierlist - The tierlist data, including the user's rankings.
@@ -96,15 +100,18 @@ async function saveTierlist(tierlist: TierlistResponse): Promise<string> {
 
 // Grouped API methods for cleaner imports and usage
 export const api = {
-  auth: {
-    checkStatus: checkAuthStatus,
-    login: loginUser,
-    register: registerUser,
-    logout: logoutUser,
-  },
-  tierlists: {
-    getList: getTierlistList,
-    getById: getTierlist,
-    postTierlist: saveTierlist,
-  },
-};
+    auth: {
+      checkStatus: checkAuthStatus,
+      login: loginUser,
+      register: registerUser,
+      logout: logoutUser,
+    },
+    tierlists: {
+      getList: getTierlistList,
+      getById: getTierlist,
+      postTierlist: saveTierlist,
+    },
+    users: {
+      getKin: getKin
+    }
+  };
