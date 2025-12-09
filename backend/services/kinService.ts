@@ -1,25 +1,27 @@
 import pool from "../db/db.js";
 import { ApiError } from "../errors/customErrors.js";
-import { GENRE_SLICE, DECADE_SLICE, DIRECTOR_SLICE } from "./featureMap.js";
+import { FEATURE_CONFIG, FEATURE_NAMES, FeatureName } from "./featureMap.js";
 
 export interface KinCompareResult {
   overallScore: number;
-  segments: {
-    genre: number;
-    decade: number;
-    director: number;
-  };
+  segments: Record<FeatureName, number>;
 }
 
 export async function getKinListbyId(
   userId: number,
   filter: string,
+  sortBy: FeatureName | "overall",
   limit: number,
   offset: number
 ) {
   const connectOnly = filter === "connected";
   const unconnectedOnly = filter === "unconnected";
 
+  const sortColumn =
+    sortBy === "overall"
+      ? `(1 - (other.profile_vector <=> tu.profile_vector))`
+      : `(1 - (other.profile_vector${FEATURE_CONFIG[sortBy].slice} <=> tu.profile_vector${FEATURE_CONFIG[sortBy].slice}))`;
+    
   const query = `--sql
     WITH TargetUser AS (
         SELECT profile_vector FROM users WHERE id = $1
@@ -27,7 +29,7 @@ export async function getKinListbyId(
     SELECT
       other.id,
       other.username,
-      (1 - (other.profile_vector <=> tu.profile_vector)) AS similarity_score
+      ${sortColumn} AS "similarity_score"
     FROM users AS other
     JOIN TargetUser AS tu ON true    
     LEFT JOIN user_connections uc ON
@@ -54,21 +56,19 @@ export async function compareKin(
   userIdA: number,
   userIdB: number
 ): Promise<KinCompareResult> {
+  const segmentScoreQueries = Object.entries(FEATURE_CONFIG)
+    .map(
+      ([name, config]) =>
+        `(1 - (u1.profile_vector${config.slice} <=> u2.profile_vector${config.slice})) AS "${name}Score"`
+    )
+    .join(",\n");
+
   const query = `--sql
     SELECT
       -- 1. Overall Score (Total Taste DNA)
       (1 - (u1.profile_vector <=> u2.profile_vector)) AS "overallScore",
-      
-      -- 2. Genre Segment Score
-      -- Slice the vector to the Genre segment and calculate Cosine Similarity
-      (1 - (u1.profile_vector${GENRE_SLICE} <=> u2.profile_vector${GENRE_SLICE})) AS "genreScore",
-      
-      -- 3. Decade Segment Score
-      (1 - (u1.profile_vector${DECADE_SLICE} <=> u2.profile_vector${DECADE_SLICE})) AS "decadeScore",
-      
-      -- 4. Director Segment Score
-      (1 - (u1.profile_vector${DIRECTOR_SLICE} <=> u2.profile_vector${DIRECTOR_SLICE})) AS "directorScore"
-      
+      ${segmentScoreQueries}
+
     FROM users AS u1, users AS u2
     WHERE
       u1.id = $1 -- User A (e.g., the current user)
@@ -77,12 +77,11 @@ export async function compareKin(
       AND u2.profile_vector IS NOT NULL
   `;
 
-  const { rows } = await pool.query<{
+  type QueryResult = Record<`${FeatureName}Score`, number> & {
     overallScore: number;
-    genreScore: number;
-    decadeScore: number;
-    directorScore: number;
-  }>(query, [userIdA, userIdB]);
+  };
+
+  const { rows } = await pool.query<QueryResult>(query, [userIdA, userIdB]);
 
   if (rows.length === 0) {
     throw new ApiError(
@@ -93,12 +92,13 @@ export async function compareKin(
 
   const result = rows[0];
 
+  const segments = FEATURE_NAMES.reduce((acc, name) => {
+    acc[name] = result[`${name}Score`];
+    return acc;
+  }, {} as Record<FeatureName, number>);
+
   return {
     overallScore: result.overallScore,
-    segments: {
-      genre: result.genreScore,
-      decade: result.decadeScore,
-      director: result.directorScore,
-    },
+    segments,
   };
 }

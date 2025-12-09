@@ -2,24 +2,31 @@ import { Request, Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { ApiError } from "../errors/customErrors.js";
 import * as kinService from "../services/kinService.js";
+import { FEATURE_NAMES, type FeatureName } from "../services/featureMap.js";
 
 interface GetKinListQueryParams {
   filter: "all" | "connected" | "unconnected";
+  sortBy: FeatureName | "overall"
   limit: number;
   offset: number;
 }
 
 function validateGetKinListQueryParams(
   query: AuthenticatedRequest["query"]
-): GetKinListQueryParams {
+): GetKinListQueryParams { 
   const FILTERS = ["all", "connected", "unconnected"] as const;
+  const VALID_SORT_BY = ["overall", ...FEATURE_NAMES];
   const DEFAULT_LIMIT = 50;
   const MAX_LIMIT = 100;
 
   const filter = FILTERS.includes(query.filter as any)
     ? (query.filter as "all" | "connected" | "unconnected")
     : "all";
-
+  
+  const sortBy = VALID_SORT_BY.includes(query.sortBy as any)
+    ? (query.sortBy as FeatureName | "overall")
+    : "overall";
+  
   const limit = Math.min(
     Math.max(parseInt(query.limit as string, 10) || DEFAULT_LIMIT, 1),
     MAX_LIMIT
@@ -27,7 +34,7 @@ function validateGetKinListQueryParams(
 
   const offset = Math.max(parseInt(query.offset as string, 10) || 0, 0);
 
-  return { filter, limit, offset };
+  return { filter, sortBy, limit, offset };
 }
 
 export async function getKins(
@@ -36,12 +43,13 @@ export async function getKins(
   next: NextFunction
 ) {
     const userId = req.user!.id;
-    const { filter, limit, offset } =
+    const { filter, limit, offset, sortBy } =
       validateGetKinListQueryParams(req.query);
     try {
         const kinData = await kinService.getKinListbyId(
             userId,
             filter,
+            sortBy,
             limit,
             offset
         )

@@ -11,10 +11,15 @@ export const TIER_WEIGHTS = {
   5: -2  // F
 };
 
-// Feature Indices
-export const GENRE_SLICE = '[0:18]'; 
-export const DECADE_SLICE = '[19:29]';
-export const DIRECTOR_SLICE = '[30:255]';
+export type FeatureName = "genre" | "decade" | "director";
+
+export const FEATURE_CONFIG: Record<FeatureName, { slice: string }> = {
+  genre:    { slice: '[0:18]' },
+  decade:   { slice: '[19:29]' },
+  director: { slice: '[30:255]' },
+};
+
+export const FEATURE_NAMES = Object.keys(FEATURE_CONFIG) as FeatureName[];
 
 export const FEATURE_MAP = {
   'Action': 0,
