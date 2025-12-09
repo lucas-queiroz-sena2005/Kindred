@@ -11,6 +11,11 @@ export const TIER_WEIGHTS = {
   5: -2  // F
 };
 
+// Feature Indices
+export const GENRE_SLICE = '[0:18]'; 
+export const DECADE_SLICE = '[19:29]';
+export const DIRECTOR_SLICE = '[30:255]';
+
 export const FEATURE_MAP = {
   'Action': 0,
   'Comedy': 1,
