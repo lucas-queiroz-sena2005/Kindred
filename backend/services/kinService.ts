@@ -17,10 +17,14 @@ export async function getKinListbyId(
   const connectOnly = filter === "connected";
   const unconnectedOnly = filter === "unconnected";
 
+  const sliceString = sortBy === "overall" ? "" : FEATURE_CONFIG[sortBy].slice;
+
   const sortColumn =
     sortBy === "overall"
-      ? `(1 - (other.profile_vector <=> tu.profile_vector))`
-      : `(1 - (other.profile_vector${FEATURE_CONFIG[sortBy].slice} <=> tu.profile_vector${FEATURE_CONFIG[sortBy].slice}))`;
+    ? `(1 - (other.profile_vector <=> tu.profile_vector))`
+    : `(1 - ( ((other.profile_vector::real[])${sliceString})::vector <=> ((tu.profile_vector::real[])${sliceString})::vector ))`;
+
+  
     
   const query = `--sql
     WITH TargetUser AS (
@@ -59,7 +63,7 @@ export async function compareKin(
   const segmentScoreQueries = Object.entries(FEATURE_CONFIG)
     .map(
       ([name, config]) =>
-        `(1 - (u1.profile_vector${config.slice} <=> u2.profile_vector${config.slice})) AS "${name}Score"`
+        `(1 - (u1.profile_vector::float8${config.slice} <=> u2.profile_vector::float8${config.slice})) AS "${name}Score"`
     )
     .join(",\n");
 

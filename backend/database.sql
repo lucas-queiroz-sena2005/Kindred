@@ -19,6 +19,17 @@ WITH (lists = 100);
 
 -- ----------------------------------------------------------
 
+CREATE TABLE user_connections (
+    user_id_a INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id_b INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    CHECK (user_id_a <user_id_b)
+    PRIMARY KEY (user_id_a, user_id_b)
+);
+
+CREATE INDEX idx_user_connections_bi_directional ON user_connections (user_id_a, user_id_b);
+
+-- ----------------------------------------------------------
+
 CREATE TABLE directors (
     id INTEGER PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL

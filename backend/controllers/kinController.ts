@@ -16,25 +16,44 @@ function validateGetKinListQueryParams(
 ): GetKinListQueryParams { 
   const FILTERS = ["all", "connected", "unconnected"] as const;
   const VALID_SORT_BY = ["overall", ...FEATURE_NAMES];
-  const DEFAULT_LIMIT = 50;
-  const MAX_LIMIT = 100;
+  const VALID_QUERY_PARAMS = ["filter", "sortBy", "limit", "offset"];
 
-  const filter = FILTERS.includes(query.filter as any)
-    ? (query.filter as "all" | "connected" | "unconnected")
-    : "all";
-  
-  const sortBy = VALID_SORT_BY.includes(query.sortBy as any)
-    ? (query.sortBy as FeatureName | "overall")
-    : "overall";
-  
-  const limit = Math.min(
-    Math.max(parseInt(query.limit as string, 10) || DEFAULT_LIMIT, 1),
-    MAX_LIMIT
-  );
+  // 1. Reject any unknown query parameters to enforce a strict API contract.
+  for (const param in query) {
+    if (!VALID_QUERY_PARAMS.includes(param)) {
+      throw new ApiError(`Unknown query parameter: '${param}'. Valid parameters are: ${VALID_QUERY_PARAMS.join(", ")}`, 400);
+    }
+  }
 
-  const offset = Math.max(parseInt(query.offset as string, 10) || 0, 0);
+  // 2. Validate each parameter, applying defaults if they are not provided.
+  const filter = query.filter as GetKinListQueryParams["filter"] | undefined;
+  if (filter && !FILTERS.includes(filter)) {
+    throw new ApiError(`Invalid filter. Must be one of: ${FILTERS.join(", ")}`, 400);
+  }
 
-  return { filter, sortBy, limit, offset };
+  const sortBy = query.sortBy as GetKinListQueryParams["sortBy"] | undefined;
+  if (sortBy && !VALID_SORT_BY.includes(sortBy)) {
+    throw new ApiError(`Invalid sortBy. Must be one of: ${VALID_SORT_BY.join(", ")}`, 400);
+  }
+
+  const limitStr = query.limit as string | undefined;
+  const limit = limitStr ? parseInt(limitStr, 10) : 50;
+  if (isNaN(limit) || limit < 1 || limit > 100) {
+    throw new ApiError("Invalid limit. Must be a number between 1 and 100.", 400);
+  }
+
+  const offsetStr = query.offset as string | undefined;
+  const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
+  if (isNaN(offset) || offset < 0) {
+    throw new ApiError("Invalid offset. Must be a non-negative number.", 400);
+  }
+
+  return {
+    filter: filter || "all",
+    sortBy: sortBy || "overall",
+    limit,
+    offset,
+  };
 }
 
 export async function getKins(
