@@ -83,9 +83,10 @@ export async function compareKin(
   res: Response,
   next: NextFunction
 ) {
-  const userId = req.user!.id;
   try {
-    const targetId = parseInt(req.params.targetId, 10);
+    const userId = req.user!.id;
+    const targetIdParam = req.params.targetId || (req.query.targetId as string);
+    const targetId = parseInt(targetIdParam, 10);
     if (isNaN(targetId)) {
       throw new ApiError("Target ID must be a valid number.", 400);
     }

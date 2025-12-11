@@ -63,7 +63,7 @@ export async function compareKin(
   const segmentScoreQueries = Object.entries(FEATURE_CONFIG)
     .map(
       ([name, config]) =>
-        `(1 - (u1.profile_vector::float8${config.slice} <=> u2.profile_vector::float8${config.slice})) AS "${name}Score"`
+        `(1 - ( ((u1.profile_vector::real[])${config.slice})::vector <=> ((u2.profile_vector::real[])${config.slice})::vector )) AS "${name}Score"`
     )
     .join(",\n");
 
