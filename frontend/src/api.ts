@@ -1,4 +1,7 @@
-import axios, { isAxiosError } from "axios";
+import axios, { isAxiosError, AxiosError } from "axios";
+import type {
+  AxiosResponse // Importe AxiosResponse como tipo
+} from "axios";
 import type {
   LoginCredentials,
   RegisterCredentials,
@@ -16,16 +19,50 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// This interceptor centralizes error handling for all API requests.
 axiosInstance.interceptors.response.use(
-  (response) => response, // Simply return the response on success
-  (error) => {
-    // If it's a structured API error, re-throw it for components to handle.
+  (response: AxiosResponse) => response,
+  (error: AxiosError) => {
     if (isAxiosError(error) && error.response) {
-      return Promise.reject(error);
+      let errorMessage = "An unexpected API error occurred.";
+
+      const responseData = error.response.data;
+      if (responseData && typeof responseData === 'object') {
+         const typedResponseData = responseData as { message?: string; error?: string };
+         errorMessage = typedResponseData.message || typedResponseData.error || errorMessage;
+      }
+
+      switch (error.response.status) {
+        case 400:
+          errorMessage = errorMessage !== "An unexpected API error occurred." ? errorMessage : "Dados inválidos. Por favor, verifique suas entradas.";
+          break;
+        case 401:
+          errorMessage = "Não autorizado. Faça login novamente.";
+          break;
+        case 403:
+          errorMessage = "Acesso proibido.";
+          break;
+        case 404:
+          errorMessage = errorMessage !== "An unexpected API error occurred." ? errorMessage : "Recurso não encontrado.";
+          break;
+        case 409:
+          errorMessage = "Conflito: este recurso já existe.";
+          break;
+        case 500:
+          errorMessage = "Erro interno do servidor. Tente novamente mais tarde.";
+          break;
+        default:
+          errorMessage = errorMessage;
+      }
+
+      error.message = errorMessage;
+
+    } else if (error.request) {
+      error.message = "Não foi possível conectar ao servidor. Verifique sua conexão com a internet.";
+    } else {
+      error.message = "Ocorreu um erro inesperado ao configurar a solicitação.";
     }
-    // Otherwise, throw a generic error.
-    return Promise.reject(new Error("An unexpected network error occurred."));
+
+    return Promise.reject(error);
   }
 );
 
@@ -34,6 +71,7 @@ async function checkAuthStatus(): Promise<{ user: User } | null> {
     const response = await axiosInstance.get("/user/me");
     return response.data;
   } catch (error) {
+    console.error("Erro ao verificar status de autenticação:", error);
     return null;
   }
 }
@@ -61,10 +99,6 @@ export interface GetTierlistListParams {
   offset?: number;
 }
 
-/**
- * Fetches a list of tierlist templates.
- * @param params - Optional query parameters for sorting, filtering, and pagination.
- */
 async function getTierlistList(
   params?: GetTierlistListParams
 ): Promise<TierListSummary[]> {
@@ -74,44 +108,34 @@ async function getTierlistList(
   return response.data;
 }
 
-/**
- * Fetches a single tierlist by its ID.
- * The response will contain the user's rankings if they exist,
- * otherwise it will contain the list of movies to be ranked.
- * @param tierlistId - The ID of the tierlist to fetch.
- */
 async function getTierlist(tierlistId: number): Promise<TierListData> {
   const response = await axiosInstance.get<TierListData>(`/tierlist/${tierlistId}`);
   return response.data;
 }
+
 async function getKin(): Promise<KinUser[]> {
-    const response = await axiosInstance.get<{ users: KinUser[] }>("/user/kin");
-    return response.data.users;
+  const response = await axiosInstance.get<{ users: KinUser[] }>("/user/kin");
+  return response.data.users;
 }
-/**
- * Saves a user's tierlist rankings.
- * @param tierlist - The tierlist data, including the user's rankings.
- * @returns A promise that resolves with a success message.
- */
+
 async function saveTierlist(tierlist: TierlistResponse): Promise<string> {
   const response = await axiosInstance.post(`/tierlist/${tierlist.templateId}`, tierlist);
   return response.data;
 }
 
-// Grouped API methods for cleaner imports and usage
 export const api = {
-    auth: {
-      checkStatus: checkAuthStatus,
-      login: loginUser,
-      register: registerUser,
-      logout: logoutUser,
-    },
-    tierlists: {
-      getList: getTierlistList,
-      getById: getTierlist,
-      postTierlist: saveTierlist,
-    },
-    users: {
-      getKin: getKin
-    }
-  };
+  auth: {
+    checkStatus: checkAuthStatus,
+    login: loginUser,
+    register: registerUser,
+    logout: logoutUser,
+  },
+  tierlists: {
+    getList: getTierlistList,
+    getById: getTierlist,
+    postTierlist: saveTierlist,
+  },
+  users: {
+    getKin: getKin
+  }
+};

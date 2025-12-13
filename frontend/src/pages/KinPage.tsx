@@ -2,6 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { KinUserCard } from "../components/KinUserCard";
+import ErrorMessage from '../components/ErrorMessage';
 
 function KinPage(): React.ReactElement {
   const { data: kinList, isLoading, isError } = useQuery({
@@ -12,7 +13,7 @@ function KinPage(): React.ReactElement {
   if (isLoading) {
     return (
       <div className="text-center py-12">
-        <p className="text-neutral-500 animate-pulse">Buscando seus Kin...</p>
+        <p className="text-neutral-500 animate-pulse">Fetching your Kin...</p>
       </div>
     );
   }
@@ -20,7 +21,7 @@ function KinPage(): React.ReactElement {
   if (isError) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">Erro ao carregar usuários compatíveis. Tente novamente mais tarde.</p>
+        <ErrorMessage message="Failed to load compatible users. Please try again later." />
       </div>
     );
   }
@@ -28,9 +29,9 @@ function KinPage(): React.ReactElement {
   if (!kinList || kinList.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-neutral-200">
-        <h2 className="text-xl font-semibold mb-2">Nenhum Kin encontrado ainda</h2>
+        <h2 className="text-xl font-semibold mb-2">No Kin found yet</h2>
         <p className="text-neutral-600">
-          Tente ranquear mais filmes para melhorarmos seu perfil de gosto!
+        Try ranking more movies to improve your taste profile!
         </p>
       </div>
     );
