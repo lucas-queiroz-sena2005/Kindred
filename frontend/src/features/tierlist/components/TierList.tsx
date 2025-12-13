@@ -23,10 +23,13 @@ export function TierList({
   const navigate = useNavigate();
   const [mode, setMode] = useState<InteractionMode>("auto");
   const [tierState, setTierState] = useState<TierState | undefined>();
-  const [savingStatus, setSavingStatus] = useState<"Save" | "Saving" | "Failed">("Save")
+  const [initialTierState, setInitialTierState] = useState<TierState | undefined>();
+  const [savingStatus, setSavingStatus] = useState<"Save" | "Saving" | "Failed">("Save");
+
   useEffect(() => {
     if (templateData) {
       const transformedData = transformToTierState(templateData);
+      setInitialTierState(transformedData);
       setTierState(transformedData);
     }
   }, [templateData]);
@@ -39,7 +42,7 @@ export function TierList({
         Tier list template not found.
       </div>
     );
-  
+
   async function handleSave() {
     if (!tierState || !templateData) {
       setSavingStatus("Failed");
@@ -50,11 +53,17 @@ export function TierList({
     api.tierlists.postTierlist(transformedData)
       .then(() => {
         setSavingStatus("Save");
-        navigate("/tierlists")
+        navigate("/tierlists");
       })
       .catch(() => {
         setSavingStatus("Failed");
-      })
+      });
+  }
+
+  function handleCancel() {
+    if (initialTierState) {
+      setTierState(initialTierState);
+    }
   }
 
   // Determine the effective interaction mode based on user selection and screen size.
@@ -91,11 +100,17 @@ export function TierList({
         />
       )}
 
-      <div>
-        <button>Cancel</button>
+      <div className="flex justify-end space-x-4 mt-6">
+        <button
+          onClick={handleCancel}
+          className="px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
+        >
+          Cancel
+        </button>
         <button
           onClick={handleSave}
           disabled={savingStatus === "Saving"}
+          className="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:bg-purple-400"
         >
           {savingStatus}
         </button>

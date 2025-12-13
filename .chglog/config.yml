@@ -1,0 +1,20 @@
+style: github
+template: CHANGELOG.tpl.md
+info:
+  title: CHANGELOG
+  repository_url: https://github.com/lucas-queiroz-sena2005/Kindred
+options:
+  commits:
+    filters: {}
+  commit_groups:
+    title_maps:
+      "": "Commits"
+  header:
+    pattern: "^(\\w*)(?:\\(([\\w\\$\\.\\-\\*\\s]*)\\))?\\:\\s(.*)$"
+    pattern_maps:
+      - Type
+      - Scope
+      - Subject
+  notes:
+    keywords:
+      - BREAKING CHANGE
