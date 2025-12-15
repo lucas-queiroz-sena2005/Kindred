@@ -1,20 +1,24 @@
 style: github
 template: CHANGELOG.tpl.md
+
 info:
   title: CHANGELOG
   repository_url: https://github.com/lucas-queiroz-sena2005/Kindred
+
 options:
   commits:
-    filters: {}
+    filters: {}  # sem filtro, aceita todos os commits
+
   commit_groups:
     title_maps:
-      "": "Commits"
-  header:
-    pattern: "^(\\w*)(?:\\(([\\w\\$\\.\\-\\*\\s]*)\\))?\\:\\s(.*)$"
-    pattern_maps:
-      - Type
-      - Scope
-      - Subject
-  notes:
-    keywords:
-      - BREAKING CHANGE
+      "Commits": "Commits"  # agrupa tudo na seção "Commits"
+
+header:
+  # captura qualquer mensagem inteira do commit
+  pattern: "^(.*)$"
+  pattern_maps:
+    - Subject
+
+notes:
+  keywords:
+    - BREAKING CHANGE
