@@ -11,7 +11,6 @@ export const TIER_WEIGHTS = {
   5: -2  // F
 };
 
-<<<<<<< HEAD
 export type FeatureName = "genre" | "decade" | "director";
 
 export const FEATURE_CONFIG: Record<FeatureName, { slice: string }> = {
@@ -22,8 +21,6 @@ export const FEATURE_CONFIG: Record<FeatureName, { slice: string }> = {
 
 export const FEATURE_NAMES = Object.keys(FEATURE_CONFIG) as FeatureName[];
 
-=======
->>>>>>> main
 export const FEATURE_MAP = {
   'Action': 0,
   'Comedy': 1,
