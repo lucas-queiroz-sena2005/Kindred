@@ -149,6 +149,7 @@ async function seedDirectorAndMovies(
   return { directorName: director.name, movieIds };
 }
 
+<<<<<<< HEAD
 async function seedUsers(client: PoolClient): Promise<number[]> {
   console.log("--- Seeding users ---");
   const usersToSeed = [
@@ -226,6 +227,19 @@ async function seedUserRanking(
   const query = `INSERT INTO ranked_items (ranking_id, movie_id, tier) VALUES ${placeholders}`;
   await client.query(query, rankedItems.flat());
   console.log(`Seeded ${movieIds.length} ranked items.`);
+=======
+async function seedUsers(client: PoolClient) {
+  console.log("--- Seeding users ---");
+  const hash = await bcrypt.hash("password123", 10);
+  await client.query(
+    `--sql
+    INSERT INTO users (username, email, password_hash)
+    VALUES ($1, $2, $3)
+    `,
+    ["testuser", "test@test.com", hash]
+  );
+  console.log("Seeded testuser (pw: password123)");
+>>>>>>> main
 }
 
 async function createTemplateAndLinkMovies(
@@ -260,7 +274,10 @@ async function createTemplateAndLinkMovies(
   console.log(
     `--- Created template for ${directorName} and linked ${movieIds.length} movies ---`
   );
+<<<<<<< HEAD
   return templateId;
+=======
+>>>>>>> main
 }
 
 async function main() {
@@ -275,6 +292,7 @@ async function main() {
     await clearDatabase(client);
     await seedGenres(client);
 
+<<<<<<< HEAD
     const seededTemplates = [];
     let totalMovies = 0;
     for (const directorId of DIRECTOR_IDS_TO_SEED) {
@@ -296,6 +314,19 @@ async function main() {
       const firstTemplate = seededTemplates[0];
       await seedUserRanking(client, testUser, firstTemplate.templateId, firstTemplate.movieIds);
     }
+=======
+    let totalMovies = 0;
+    for (const id of DIRECTOR_IDS_TO_SEED) {
+      const { directorName, movieIds } = await seedDirectorAndMovies(
+        client,
+        id
+      );
+      totalMovies += movieIds.length;
+      await createTemplateAndLinkMovies(client, directorName, movieIds);
+    }
+
+    await seedUsers(client);
+>>>>>>> main
 
     await client.query("COMMIT");
     console.log(`\n✅ Database seeding complete! Total movies: ${totalMovies}`);

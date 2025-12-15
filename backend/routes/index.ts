@@ -2,7 +2,10 @@ import { Router } from "express";
 import authRouter from "./auth.js";
 import userRouter from "./me.js";
 import tierListRouter from "./tierlist.js";
+<<<<<<< HEAD
 import kinRouter from "./kin.js";
+=======
+>>>>>>> main
 import { isAuthenticated } from "../middleware/isAuthenticated.js";
 
 const router = Router();
@@ -14,6 +17,9 @@ router.get("/", (req, res) => {
 router.use("/auth", authRouter);
 router.use("/user", isAuthenticated, userRouter);
 router.use("/tierlist", isAuthenticated, tierListRouter);
+<<<<<<< HEAD
 router.use("/kin", isAuthenticated, kinRouter);
+=======
+>>>>>>> main
 
 export default router;

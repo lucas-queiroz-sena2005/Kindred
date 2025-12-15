@@ -23,6 +23,7 @@ export function TierList({
   const navigate = useNavigate();
   const [mode, setMode] = useState<InteractionMode>("auto");
   const [tierState, setTierState] = useState<TierState | undefined>();
+<<<<<<< HEAD
   const [initialTierState, setInitialTierState] = useState<TierState | undefined>();
   const [savingStatus, setSavingStatus] = useState<"Save" | "Saving" | "Failed">("Save");
 
@@ -30,6 +31,12 @@ export function TierList({
     if (templateData) {
       const transformedData = transformToTierState(templateData);
       setInitialTierState(transformedData);
+=======
+  const [savingStatus, setSavingStatus] = useState<"Save" | "Saving" | "Failed">("Save")
+  useEffect(() => {
+    if (templateData) {
+      const transformedData = transformToTierState(templateData);
+>>>>>>> main
       setTierState(transformedData);
     }
   }, [templateData]);
@@ -42,7 +49,11 @@ export function TierList({
         Tier list template not found.
       </div>
     );
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> main
   async function handleSave() {
     if (!tierState || !templateData) {
       setSavingStatus("Failed");
@@ -53,6 +64,7 @@ export function TierList({
     api.tierlists.postTierlist(transformedData)
       .then(() => {
         setSavingStatus("Save");
+<<<<<<< HEAD
         navigate("/tierlists");
       })
       .catch(() => {
@@ -64,6 +76,13 @@ export function TierList({
     if (initialTierState) {
       setTierState(initialTierState);
     }
+=======
+        navigate("/tierlists")
+      })
+      .catch(() => {
+        setSavingStatus("Failed");
+      })
+>>>>>>> main
   }
 
   // Determine the effective interaction mode based on user selection and screen size.
@@ -100,6 +119,7 @@ export function TierList({
         />
       )}
 
+<<<<<<< HEAD
       <div className="flex justify-end space-x-4 mt-6">
         <button
           onClick={handleCancel}
@@ -111,6 +131,13 @@ export function TierList({
           onClick={handleSave}
           disabled={savingStatus === "Saving"}
           className="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:bg-purple-400"
+=======
+      <div>
+        <button>Cancel</button>
+        <button
+          onClick={handleSave}
+          disabled={savingStatus === "Saving"}
+>>>>>>> main
         >
           {savingStatus}
         </button>
