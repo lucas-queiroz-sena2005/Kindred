@@ -1,11 +1,7 @@
-<<<<<<< HEAD
 import axios, { isAxiosError, AxiosError } from "axios";
 import type {
   AxiosResponse // Importe AxiosResponse como tipo
 } from "axios";
-=======
-import axios, { isAxiosError } from "axios";
->>>>>>> main
 import type {
   LoginCredentials,
   RegisterCredentials,
@@ -23,7 +19,6 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-<<<<<<< HEAD
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
@@ -68,18 +63,6 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-=======
-// This interceptor centralizes error handling for all API requests.
-axiosInstance.interceptors.response.use(
-  (response) => response, // Simply return the response on success
-  (error) => {
-    // If it's a structured API error, re-throw it for components to handle.
-    if (isAxiosError(error) && error.response) {
-      return Promise.reject(error);
-    }
-    // Otherwise, throw a generic error.
-    return Promise.reject(new Error("An unexpected network error occurred."));
->>>>>>> main
   }
 );
 
@@ -88,10 +71,7 @@ async function checkAuthStatus(): Promise<{ user: User } | null> {
     const response = await axiosInstance.get("/user/me");
     return response.data;
   } catch (error) {
-<<<<<<< HEAD
     console.error("Erro ao verificar status de autenticação:", error);
-=======
->>>>>>> main
     return null;
   }
 }
@@ -119,13 +99,6 @@ export interface GetTierlistListParams {
   offset?: number;
 }
 
-<<<<<<< HEAD
-=======
-/**
- * Fetches a list of tierlist templates.
- * @param params - Optional query parameters for sorting, filtering, and pagination.
- */
->>>>>>> main
 async function getTierlistList(
   params?: GetTierlistListParams
 ): Promise<TierListSummary[]> {
@@ -135,43 +108,21 @@ async function getTierlistList(
   return response.data;
 }
 
-<<<<<<< HEAD
-=======
-/**
- * Fetches a single tierlist by its ID.
- * The response will contain the user's rankings if they exist,
- * otherwise it will contain the list of movies to be ranked.
- * @param tierlistId - The ID of the tierlist to fetch.
- */
->>>>>>> main
 async function getTierlist(tierlistId: number): Promise<TierListData> {
   const response = await axiosInstance.get<TierListData>(`/tierlist/${tierlistId}`);
   return response.data;
 }
-<<<<<<< HEAD
 
 async function getKin(): Promise<KinUser[]> {
   const response = await axiosInstance.get<{ users: KinUser[] }>("/user/kin");
   return response.data.users;
 }
 
-=======
-async function getKin(): Promise<KinUser[]> {
-    const response = await axiosInstance.get<{ users: KinUser[] }>("/user/kin");
-    return response.data.users;
-}
-/**
- * Saves a user's tierlist rankings.
- * @param tierlist - The tierlist data, including the user's rankings.
- * @returns A promise that resolves with a success message.
- */
->>>>>>> main
 async function saveTierlist(tierlist: TierlistResponse): Promise<string> {
   const response = await axiosInstance.post(`/tierlist/${tierlist.templateId}`, tierlist);
   return response.data;
 }
 
-<<<<<<< HEAD
 export const api = {
   auth: {
     checkStatus: checkAuthStatus,
@@ -188,22 +139,3 @@ export const api = {
     getKin: getKin
   }
 };
-=======
-// Grouped API methods for cleaner imports and usage
-export const api = {
-    auth: {
-      checkStatus: checkAuthStatus,
-      login: loginUser,
-      register: registerUser,
-      logout: logoutUser,
-    },
-    tierlists: {
-      getList: getTierlistList,
-      getById: getTierlist,
-      postTierlist: saveTierlist,
-    },
-    users: {
-      getKin: getKin
-    }
-  };
->>>>>>> main
