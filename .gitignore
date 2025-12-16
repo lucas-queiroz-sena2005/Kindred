@@ -10,6 +10,9 @@ yarn-error.log*
 .env
 backend/.env
 frontend/.env
+*.env.local
+*.env.development
+*.env.production
 
 # Dependencies
 node_modules/
@@ -29,3 +32,10 @@ frontend/dist/
 
 # Test Coverage
 coverage/
+
+# Database dumps and backups
+*.sql
+*.dump
+
+# Node modules and locks (if not needed, but typically package-lock.json is committed)
+node_modules/
