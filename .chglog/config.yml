@@ -7,18 +7,33 @@ info:
 
 options:
   commits:
-    filters: {}  # sem filtro, aceita todos os commits
+    filters: {}
 
   commit_groups:
     title_maps:
-      "Commits": "Commits"  # agrupa tudo na seção "Commits"
+      feat: "✨ Novas Funcionalidades"
+      fix: "🐛 Correções"
+      perf: "⚡ Melhorias de Performance"
+      docs: "📖 Documentação"
+      chore: "🧹 Manutenção"
+      refactor: "♻️ Refatoração"
+      test: "🧪 Testes"
+      ci: "⚙️ CI/CD"
+      build: "📦 Build"
+      style: "🎨 Estilo"
+      security: "🔐 Segurança"
+      revert: "🔙 Reversões"
+      other: "📦 Outros"
 
 header:
-  # captura qualquer mensagem inteira do commit
-  pattern: "^(.*)$"
+  pattern: '^(\w*)(?:\(([\w\ $\.\-\*]*)\))?: (.*)$'
   pattern_maps:
+    - Type
+    - Scope
     - Subject
 
 notes:
   keywords:
     - BREAKING CHANGE
+    - breaking change
+    - security
