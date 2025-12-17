@@ -116,7 +116,6 @@ export async function saveRanking(
   const { rankedItems } = req.body; // rankedItems: [{ movieId, tier }]
 
   try {
-    // Validate inputs before passing to the service
     if (isNaN(templateId)) {
       throw new ApiError("Template ID must be a valid number.", 400);
     }
