@@ -1,18 +1,22 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Topbar from './Topbar';
 import Navbar from './Navbar';
+import Topbar from './Topbar';
+import ThemeToggle from './ThemeToggleButton';
 
 function Layout(): React.ReactElement {
-    return (
-        <div className="bg-neutral-100 text-neutral-900 min-h-screen font-sans">
-            <Topbar />
-            <Navbar />
-            <main className="w-full max-w-6xl mx-auto p-8">
-                <Outlet />
-            </main>
-        </div>
-    );
+  return (
+    <div className="min-h-screen font-sans bg-neutral-50 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50">
+      <Topbar />
+      <Navbar />
+      <div className="p-4">
+        <ThemeToggle />
+      </div>
+      <main className="w-full max-w-6xl mx-auto p-8">
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 
 export default Layout;

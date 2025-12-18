@@ -24,7 +24,7 @@ function MyTierlistPage(): React.ReactElement {
         filter: "ranked",
         limit: PAGE_LIMIT,
         offset: pageParam,
-      }),      
+      }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       const totalFetched = allPages.flat().length;

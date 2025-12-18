@@ -12,22 +12,19 @@ export function TemplateCardSkeleton({
   ) : (
     <>
       <div className="p-4 flex-grow">
-        <div className="h-6 w-3/4 bg-neutral-200 rounded animate-pulse mb-3"></div>
-        <div className="h-4 w-full bg-neutral-200 rounded animate-pulse mb-1"></div>
-        <div className="h-4 w-5/6 bg-neutral-200 rounded animate-pulse"></div>
+        <div className="h-5 bg-neutral-200 dark:bg-neutral-800 rounded w-3/4 mb-3 animate-pulse"></div>
+        <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-full mb-2 animate-pulse"></div>
+        <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-5/6 animate-pulse"></div>
       </div>
-      <div className="p-4 bg-neutral-50/75 border-t border-neutral-200/80 rounded-b-lg flex flex-col justify-end">
-        <div className="flex justify-between items-center text-xs text-neutral-500 mb-3">
-          <div className="h-3 w-1/4 bg-neutral-200 rounded animate-pulse"></div>
-          <div className="h-3 w-1/3 bg-neutral-200 rounded animate-pulse"></div>
-        </div>
-        <div className="h-9 w-full bg-neutral-200 rounded-md animate-pulse"></div>
+
+      <div className="p-4 border-t border-neutral-200 dark:border-neutral-800">
+        <div className="h-8 bg-neutral-200 dark:bg-neutral-800 rounded w-full animate-pulse"></div>
       </div>
     </>
   );
 
   return (
-    <div className="flex flex-col h-72 border rounded-lg bg-white transition-all duration-200">
+    <div className="h-60 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm flex flex-col overflow-hidden">
       {content}
     </div>
   );

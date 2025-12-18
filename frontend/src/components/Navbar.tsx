@@ -6,55 +6,64 @@ function Navbar(): React.ReactElement {
   const { isAuthenticated, logout } = useAuth();
 
   return (
-    <nav className="bg-white border-b border-neutral-200 sticky top-0 z-10">
-      <ul className="flex items-center justify-center space-x-8 h-12 text-sm font-medium text-neutral-600">
+    <nav className="bg-white border-b border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800">
+      <ul className="flex justify-center items-center gap-6 px-6 py-4 text-neutral-700 dark:text-neutral-200">
         {!isAuthenticated ? (
           <>
             <li>
-              <Link to="/login" className="hover:text-purple-600 transition-colors">
-                Login
+              <Link
+                to="/login"
+                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+              >
+                <span className="inline-block mr-2"></span> Login
               </Link>
             </li>
             <li>
-              <Link to="/register" className="hover:text-purple-600 transition-colors">
-                Register
+              <Link
+                to="/register"
+                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+              >
+                <span className="inline-block mr-2"></span> Register
               </Link>
             </li>
           </>
         ) : (
           <>
             <li>
-              <Link to="/" className="hover:text-purple-600 transition-colors">
-                Feed
+              <Link
+                to="/"
+                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+              >
+                <span className="inline-block mr-2"></span> Feed
               </Link>
             </li>
             <li>
               <Link
                 to="/tierlists"
-                className="hover:text-purple-600 transition-colors"
+                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
               >
-                My Tierlists
+                <span className="inline-block mr-2"></span> My Tierlists
               </Link>
             </li>
             <li>
-              <Link to="/kin" className="hover:text-purple-600 transition-colors">
-                My Kin
+              <Link
+                to="/kin"
+                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+              >
+                <span className="inline-block mr-2"></span> Kin
               </Link>
             </li>
             <li>
               <Link
                 to="/account"
-                className="hover:text-purple-600 transition-colors"
+                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
               >
-                My Account
+                <span className="inline-block mr-2"></span> Account
               </Link>
             </li>
             <li>
-              <button
-                onClick={logout}
-                className="hover:text-purple-600 transition-colors"
-              >
-                Logout
+              <button onClick={logout} className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                <span className="inline-block mr-2"></span> Logout
               </button>
             </li>
           </>
