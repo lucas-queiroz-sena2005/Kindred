@@ -113,9 +113,18 @@ async function getTierlist(tierlistId: number): Promise<TierListData> {
   return response.data;
 }
 
-async function getKin(): Promise<KinUser[]> {
-  const response = await axiosInstance.get<{ users: KinUser[] }>("/user/kin");
-  return response.data.users;
+export interface GetKinListParams {
+  filter?: "all" | "connected" | "unconnected";
+  sortBy?: string;
+  limit?: number;
+  offset?: number;
+}
+
+async function getKin(params?: GetKinListParams): Promise<KinUser[]> {
+  const response = await axiosInstance.get<KinUser[]>("/kin/list", {
+    params,
+  });
+  return response.data;
 }
 
 async function saveTierlist(tierlist: TierlistResponse): Promise<string> {
@@ -135,7 +144,7 @@ export const api = {
     getById: getTierlist,
     postTierlist: saveTierlist,
   },
-  users: {
+  kin: {
     getKin: getKin
   }
 };

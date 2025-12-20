@@ -33,7 +33,7 @@ export async function getKinListbyId(
     SELECT
       other.id,
       other.username,
-      ${sortColumn} AS "similarity_score"
+      ${sortColumn} AS "similarityScore"
     FROM users AS other
     JOIN TargetUser AS tu ON true    
     LEFT JOIN user_connections uc ON
@@ -47,7 +47,7 @@ export async function getKinListbyId(
       ${unconnectedOnly ? "AND uc.user_id_a IS NULL" : ""}
       
     ORDER BY
-        similarity_score DESC
+        "similarityScore" DESC
     
     LIMIT $2 OFFSET $3
   `;

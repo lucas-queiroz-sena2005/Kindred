@@ -24,6 +24,7 @@ frontend/node_modules/
 
 # Backend Build Artifacts
 backend/dist/
+postgres_data
 
 # Frontend Build Artifacts
 frontend/build/
@@ -35,6 +36,7 @@ frontend/dist/
 
 # Test Coverage
 coverage/
+<<<<<<< Updated upstream
 
 # Database dumps and backups
 *.sql
@@ -46,3 +48,5 @@ node_modules/
 # Exceto os que pertencem a backend/frontend
 !backend/package-lock.json
 !frontend/package-lock.json
+=======
+>>>>>>> Stashed changes
