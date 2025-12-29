@@ -25,10 +25,21 @@ WITH (lists = 100);
 
 -- ----------------------------------------------------------
 
+CREATE TABLE connection_request (
+    sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (sender_id, receiver_id)
+);
+
+CREATE INDEX idx_connection_request_bi_directional ON connection_request (sender_id, receiver_id);
+
+-- ----------------------------------------------------------
+
 CREATE TABLE user_connections (
     user_id_a INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     user_id_b INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    CHECK (user_id_a < user_id_b), -- Missing comma was here
+    CHECK (user_id_a < user_id_b),
     PRIMARY KEY (user_id_a, user_id_b)
 );
 
@@ -144,7 +155,7 @@ CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    content CHAR(255) NOT NULL,
+    content VARCHAR(255) NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );

@@ -3,7 +3,7 @@ import { getMessages, sendMessage } from "../controllers/messageController.js";
 
 const messageRouter = Router();
 
-messageRouter.get("/getmessages", getMessages);
-messageRouter.post("/sendmessage", sendMessage);
+messageRouter.get("/:targetId", getMessages);
+messageRouter.post("/:targetId", sendMessage);
 
 export default messageRouter;

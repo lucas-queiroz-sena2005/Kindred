@@ -3,7 +3,8 @@ import authRouter from "./auth.js";
 import userRouter from "./me.js";
 import tierListRouter from "./tierlist.js";
 import kinRouter from "./kin.js";
-import messageRouter from "./message.js";
+import messageRouter from "./messages.js";
+import connectionRouter from "./connection.js";
 import { isAuthenticated } from "../middleware/isAuthenticated.js";
 
 const router = Router();
@@ -16,6 +17,7 @@ router.use("/auth", authRouter);
 router.use("/user", isAuthenticated, userRouter);
 router.use("/tierlist", isAuthenticated, tierListRouter);
 router.use("/kin", isAuthenticated, kinRouter);
-router.use("/message", isAuthenticated, messageRouter);
+router.use("/messages", isAuthenticated, messageRouter);
+router.use("/connection", isAuthenticated, connectionRouter);
 
 export default router;

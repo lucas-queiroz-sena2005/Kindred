@@ -17,7 +17,7 @@ export async function registerUser(
     const token = createToken(registeredUser.id, authConfig.JWT_SECRET);
     setTokenCookie(res, token);
 
-    res.status(201).json({ username: registeredUser.username });
+    res.status(201).json({ user: registeredUser, token });
   } catch (err) {
     if (err instanceof ApiError) {
       return res.status(err.statusCode).json({ error: err.message });
@@ -41,7 +41,7 @@ export async function loginUser(
     const token = createToken(user.id, authConfig.JWT_SECRET);
     setTokenCookie(res, token);
 
-    res.status(200).json({ username: user.username });
+    res.status(200).json({ user, token });
   } catch (err) {
     if (err instanceof ApiError) {
       return res.status(err.statusCode).json({ error: err.message });

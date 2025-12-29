@@ -1,7 +1,7 @@
 import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { ApiError } from "../errors/customErrors.js";
-import * as MessageService from "../services/messageService.js";
+import * as ConnectionService from "../services/connectionService.js";
 
 function validateGetListParams(req: AuthenticatedRequest) {
   const limitStr = req.query.limit as string | undefined;
@@ -20,7 +20,8 @@ function validateGetListParams(req: AuthenticatedRequest) {
   }
   return { limit, offset };
 }
-export async function getMessages(
+
+export async function askConnection(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
@@ -29,68 +30,77 @@ export async function getMessages(
     const userId = req.user!.id;
     const targetIdParam = req.params.targetId || (req.query.targetId as string);
     const targetId = parseInt(targetIdParam, 10);
-
     if (isNaN(targetId)) {
       throw new ApiError("Target ID must be a valid number.", 400);
     }
     if (userId === targetId) {
-      throw new ApiError("Cannot get messages from self.", 400);
+      throw new ApiError("Cannot connect with self.", 400);
     }
-    const { limit, offset } = validateGetListParams(req);
+    const result = await ConnectionService.askConnection(userId, targetId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
 
-    const messages = await MessageService.getMessages(
+export async function rejectConnectionRequest(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const userId = req.user!.id;
+    const targetIdParam = req.params.targetId || (req.query.targetId as string);
+    const targetId = parseInt(targetIdParam, 10);
+    if (isNaN(targetId)) {
+      throw new ApiError("Target ID must be a valid number.", 400);
+    }
+    if (userId === targetId) {
+      throw new ApiError("Cannot connect with self.", 400);
+    }
+    const result = await ConnectionService.rejectConnectionRequest(
       userId,
       targetId,
-      limit,
-      offset,
     );
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getRequests(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const userId = req.user!.id;
+    const { limit, offset } = validateGetListParams(req);
+
+    const messages = await ConnectionService.getRequests(userId, limit, offset);
     res.status(200).json(messages);
   } catch (error) {
     next(error);
   }
 }
 
-export async function sendMessage(
+export async function cancelConnection(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    if (!req.body) {
-      throw new ApiError("Request body is missing or not in JSON format.", 400);
-    }
     const userId = req.user!.id;
     const targetIdParam = req.params.targetId || (req.query.targetId as string);
     const targetId = parseInt(targetIdParam, 10);
-    let message = req.body.message;
-
-    if (
-      typeof message === "object" &&
-      message !== null &&
-      "message" in message
-    ) {
-      message = message.message;
-    }
-
-    if (!message) {
-      throw new ApiError("Message is required.", 400);
-    }
-    if (message.length < 1 || message.length > 255) {
-      throw new ApiError("Message too long.", 400);
-    }
     if (isNaN(targetId)) {
       throw new ApiError("Target ID must be a valid number.", 400);
     }
     if (userId === targetId) {
-      throw new ApiError("Cannot send message to self.", 400);
+      throw new ApiError("Cannot cancel connection with self.", 400);
     }
-
-    const messages = await MessageService.sendMessage(
-      userId,
-      targetId,
-      message,
-    );
-    res.status(200).json(messages);
+    const result = await ConnectionService.cancelConnection(userId, targetId);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
