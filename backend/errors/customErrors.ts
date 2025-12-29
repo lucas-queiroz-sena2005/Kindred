@@ -23,6 +23,6 @@ export class ConflictError extends ApiError {
 
 export class UnauthorizedError extends ApiError {
   constructor(message = "Invalid credentials") {
-    super(message, 409);
+    super(message, 401);
   }
 }

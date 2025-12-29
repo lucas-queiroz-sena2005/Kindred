@@ -6,18 +6,17 @@ import { ApiError } from "../errors/customErrors.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
-
 const PORT = process.env.PORT || 3001;
 const app: Express = express();
 
 const corsOptions = {
-  origin: `http://localhost:${PORT}`,
+  origin: "http://localhost:5173",
   credentials: true,
 };
 
-app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cookieParser())
+app.use(cors(corsOptions));
+app.use(cookieParser());
 app.use(express.static("public"));
 app.use("/api", apiRoutes);
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -52,7 +51,7 @@ async function testDatabaseConnection() {
     const result = await client.query("SELECT NOW()");
     console.log(
       "✅ Database connection successful. Server time:",
-      result.rows[0].now
+      result.rows[0].now,
     );
     client.release();
   } catch (err) {

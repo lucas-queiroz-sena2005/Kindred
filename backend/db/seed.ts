@@ -38,7 +38,10 @@ const tmdb = axios.create({
 function buildBulkInsertPlaceholders(rows: number, columns: number): string {
   let paramIndex = 1;
   return Array.from({ length: rows }, () => {
-    const rowPlaceholders = Array.from({ length: columns }, () => `$${paramIndex++}`);
+    const rowPlaceholders = Array.from(
+      { length: columns },
+      () => `$${paramIndex++}`,
+    );
     return `(${rowPlaceholders.join(", ")})`;
   }).join(", ");
 }
@@ -47,11 +50,11 @@ async function clearDatabase(client: PoolClient) {
   console.log("--- Clearing database ---");
   await client.query(
     `--sql
-    TRUNCATE TABLE ranked_items, user_rankings, template_movies, movie_genres, messages RESTART IDENTITY CASCADE`
+    TRUNCATE TABLE ranked_items, user_rankings, template_movies, movie_genres, messages RESTART IDENTITY CASCADE`,
   );
   await client.query(
     `--sql
-    TRUNCATE TABLE users, movies, directors, genres, tierlist_templates RESTART IDENTITY CASCADE`
+    TRUNCATE TABLE users, movies, directors, genres, tierlist_templates RESTART IDENTITY CASCADE`,
   );
   console.log("Database cleared.");
 }
@@ -72,17 +75,17 @@ async function seedGenres(client: PoolClient) {
     VALUES ${placeholders}
     ON CONFLICT (id) DO NOTHING
   `;
-  
+
   await client.query(insertQuery, genreValues.flat());
   console.log(`Seeded ${data.genres.length} genres.`);
 }
 
 async function seedDirectorAndMovies(
   client: PoolClient,
-  directorTmdbId: number
+  directorTmdbId: number,
 ) {
   const { data: director } = await tmdb.get<Director>(
-    `/person/${directorTmdbId}`
+    `/person/${directorTmdbId}`,
   );
   await client.query(
     `--sql
@@ -90,12 +93,12 @@ async function seedDirectorAndMovies(
     VALUES ($1, $2)
     ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name
     `,
-    [director.id, director.name]
+    [director.id, director.name],
   );
   console.log(`--- Seeding director: ${director.name} ---`);
 
   const { data: credits } = await tmdb.get<{ crew: MovieCredit[] }>(
-    `/person/${directorTmdbId}/movie_credits`
+    `/person/${directorTmdbId}/movie_credits`,
   );
 
   const films = credits.crew.filter(
@@ -103,7 +106,7 @@ async function seedDirectorAndMovies(
       film.job === "Director" &&
       film.release_date &&
       film.vote_count >= MINIMUM_VOTE_COUNT &&
-      !film.genre_ids.includes(DOCUMENTARY_GENRE_ID)
+      !film.genre_ids.includes(DOCUMENTARY_GENRE_ID),
   );
 
   if (films.length === 0) {
@@ -131,11 +134,14 @@ async function seedDirectorAndMovies(
   await client.query(movieInsertQuery, movieValues.flat());
 
   const movieGenreValues = films.flatMap((film) =>
-    film.genre_ids.map((genreId) => [film.id, genreId])
+    film.genre_ids.map((genreId) => [film.id, genreId]),
   );
-  
+
   if (movieGenreValues.length > 0) {
-    const genrePlaceholders = buildBulkInsertPlaceholders(movieGenreValues.length, 2);
+    const genrePlaceholders = buildBulkInsertPlaceholders(
+      movieGenreValues.length,
+      2,
+    );
     const movieGenreInsertQuery = `--sql
       INSERT INTO movie_genres (movie_id, genre_id)
       VALUES ${genrePlaceholders}
@@ -149,7 +155,6 @@ async function seedDirectorAndMovies(
   return { directorName: director.name, movieIds };
 }
 
-<<<<<<< HEAD
 async function seedUsers(client: PoolClient): Promise<number[]> {
   console.log("--- Seeding users ---");
   const usersToSeed = [
@@ -166,7 +171,7 @@ async function seedUsers(client: PoolClient): Promise<number[]> {
       // Generate a random 256-dimension vector for the profile
       const profileVector = Array.from({ length: 256 }, () => Math.random());
       return [user.username, user.email, hash, `[${profileVector.join(",")}]`];
-    })
+    }),
   );
 
   const placeholders = buildBulkInsertPlaceholders(userValues.length, 4);
@@ -196,7 +201,7 @@ async function seedUserConnections(client: PoolClient, userIds: number[]) {
   ];
 
   const values = connections.map(([idA, idB]) =>
-    idA < idB ? [idA, idB] : [idB, idA]
+    idA < idB ? [idA, idB] : [idB, idA],
   );
 
   const placeholders = buildBulkInsertPlaceholders(values.length, 2);
@@ -214,38 +219,34 @@ async function seedUserRanking(
   client: PoolClient,
   userId: number,
   templateId: number,
-  movieIds: number[]
+  movieIds: number[],
 ) {
-  console.log(`--- Seeding ranking for user ${userId} on template ${templateId} ---`);
-  const rankingRes = await client.query(`--sql
+  console.log(
+    `--- Seeding ranking for user ${userId} on template ${templateId} ---`,
+  );
+  const rankingRes = await client.query(
+    `--sql
     INSERT INTO user_rankings (user_id, template_id) VALUES ($1, $2) RETURNING id
-  `, [userId, templateId]);
+  `,
+    [userId, templateId],
+  );
   const rankingId = rankingRes.rows[0].id;
 
-  const rankedItems = movieIds.map(movieId => [rankingId, movieId, Math.floor(Math.random() * 6)]); // Random tier 0-5
+  const rankedItems = movieIds.map((movieId) => [
+    rankingId,
+    movieId,
+    Math.floor(Math.random() * 6),
+  ]); // Random tier 0-5
   const placeholders = buildBulkInsertPlaceholders(rankedItems.length, 3);
   const query = `INSERT INTO ranked_items (ranking_id, movie_id, tier) VALUES ${placeholders}`;
   await client.query(query, rankedItems.flat());
   console.log(`Seeded ${movieIds.length} ranked items.`);
-=======
-async function seedUsers(client: PoolClient) {
-  console.log("--- Seeding users ---");
-  const hash = await bcrypt.hash("password123", 10);
-  await client.query(
-    `--sql
-    INSERT INTO users (username, email, password_hash)
-    VALUES ($1, $2, $3)
-    `,
-    ["testuser", "test@test.com", hash]
-  );
-  console.log("Seeded testuser (pw: password123)");
->>>>>>> main
 }
 
 async function createTemplateAndLinkMovies(
   client: PoolClient,
   directorName: string,
-  movieIds: number[]
+  movieIds: number[],
 ) {
   const res = await client.query(
     `--sql
@@ -256,13 +257,19 @@ async function createTemplateAndLinkMovies(
     [
       `Filmography: ${directorName}`,
       `Rank all films directed by ${directorName}.`,
-    ]
+    ],
   );
   const templateId = res.rows[0].id;
 
   if (movieIds.length > 0) {
-    const templateMovieValues = movieIds.map((movieId) => [templateId, movieId]);
-    const placeholders = buildBulkInsertPlaceholders(templateMovieValues.length, 2);
+    const templateMovieValues = movieIds.map((movieId) => [
+      templateId,
+      movieId,
+    ]);
+    const placeholders = buildBulkInsertPlaceholders(
+      templateMovieValues.length,
+      2,
+    );
     const insertQuery = `--sql
       INSERT INTO template_movies (template_id, movie_id)
       VALUES ${placeholders}
@@ -272,12 +279,9 @@ async function createTemplateAndLinkMovies(
   }
 
   console.log(
-    `--- Created template for ${directorName} and linked ${movieIds.length} movies ---`
+    `--- Created template for ${directorName} and linked ${movieIds.length} movies ---`,
   );
-<<<<<<< HEAD
   return templateId;
-=======
->>>>>>> main
 }
 
 async function main() {
@@ -292,16 +296,19 @@ async function main() {
     await clearDatabase(client);
     await seedGenres(client);
 
-<<<<<<< HEAD
     const seededTemplates = [];
     let totalMovies = 0;
     for (const directorId of DIRECTOR_IDS_TO_SEED) {
       const { directorName, movieIds } = await seedDirectorAndMovies(
         client,
-        directorId
+        directorId,
       );
       totalMovies += movieIds.length;
-      const templateId = await createTemplateAndLinkMovies(client, directorName, movieIds);
+      const templateId = await createTemplateAndLinkMovies(
+        client,
+        directorName,
+        movieIds,
+      );
       seededTemplates.push({ templateId, movieIds });
     }
 
@@ -312,21 +319,13 @@ async function main() {
     if (userIds.length > 0 && seededTemplates.length > 0) {
       const testUser = userIds[0];
       const firstTemplate = seededTemplates[0];
-      await seedUserRanking(client, testUser, firstTemplate.templateId, firstTemplate.movieIds);
-    }
-=======
-    let totalMovies = 0;
-    for (const id of DIRECTOR_IDS_TO_SEED) {
-      const { directorName, movieIds } = await seedDirectorAndMovies(
+      await seedUserRanking(
         client,
-        id
+        testUser,
+        firstTemplate.templateId,
+        firstTemplate.movieIds,
       );
-      totalMovies += movieIds.length;
-      await createTemplateAndLinkMovies(client, directorName, movieIds);
     }
-
-    await seedUsers(client);
->>>>>>> main
 
     await client.query("COMMIT");
     console.log(`\n✅ Database seeding complete! Total movies: ${totalMovies}`);

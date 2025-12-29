@@ -1,9 +1,0 @@
-{
-    "devDependencies": {
-        "auto-changelog": "^2.5.0"
-    },
-    "scripts": {
-"changelog": "git-chglog --output CHANGELOG.md",
-    "changelog:release": "git-chglog --next-version $(node -p \"require('./package.json').version\") --output CHANGELOG.md"
-}
-}

@@ -3,6 +3,7 @@ import authRouter from "./auth.js";
 import userRouter from "./me.js";
 import tierListRouter from "./tierlist.js";
 import kinRouter from "./kin.js";
+import messageRouter from "./message.js";
 import { isAuthenticated } from "../middleware/isAuthenticated.js";
 
 const router = Router();
@@ -15,5 +16,6 @@ router.use("/auth", authRouter);
 router.use("/user", isAuthenticated, userRouter);
 router.use("/tierlist", isAuthenticated, tierListRouter);
 router.use("/kin", isAuthenticated, kinRouter);
+router.use("/message", isAuthenticated, messageRouter);
 
 export default router;
