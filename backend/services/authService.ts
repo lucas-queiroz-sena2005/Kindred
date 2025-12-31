@@ -1,9 +1,12 @@
 import bcrypt from "bcryptjs";
+import { Filter } from "bad-words";
 import pool from "../db/db.js";
 import { ConflictError, UnauthorizedError } from "../errors/customErrors.js";
 import { validateRegistrationInput } from "../utils/authValidation.js";
 import { authConfig } from "../config/authConfig.js";
 import { RegisteredUser, UserData } from "../types/userTypes.js";
+
+const filter = new Filter();
 
 export async function register(userData: UserData): Promise<RegisteredUser> {
   // Sanitization
@@ -14,10 +17,18 @@ export async function register(userData: UserData): Promise<RegisteredUser> {
   };
   validateRegistrationInput(trimmedData);
 
+  // Verify if content is clean
+  if (
+    filter.isProfane(trimmedData.username) ||
+    filter.isProfane(trimmedData.email)
+  ) {
+    throw new ConflictError("Username or email contains inappropriate words.");
+  }
+
   // Verification if existing user
   const existingUser = await pool.query<{ id: number }>(
     "SELECT id FROM users WHERE email = $1 OR username = $2",
-    [trimmedData.email, trimmedData.username]
+    [trimmedData.email, trimmedData.username],
   );
 
   if (existingUser.rows.length > 0) {
@@ -27,14 +38,14 @@ export async function register(userData: UserData): Promise<RegisteredUser> {
   // Password encryptation
   const hashedPassword = await bcrypt.hash(
     trimmedData.password,
-    authConfig.SALT_ROUNDS
+    authConfig.SALT_ROUNDS,
   );
 
   // User insertion
   const newUserResult = await pool.query<{ id: number }>(
     `--sql
     INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id`,
-    [trimmedData.username, trimmedData.email, hashedPassword]
+    [trimmedData.username, trimmedData.email, hashedPassword],
   );
 
   const newUserId = newUserResult.rows[0].id;
@@ -55,7 +66,7 @@ export async function login(userData: UserData): Promise<RegisteredUser> {
   }>(
     `--sql
     SELECT id, username, password_hash FROM users WHERE username = $1`,
-    [username.trim()]
+    [username.trim()],
   );
 
   if (users.length === 0) {

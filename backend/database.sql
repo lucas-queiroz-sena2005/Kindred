@@ -47,6 +47,17 @@ CREATE INDEX idx_user_connections_bi_directional ON user_connections (user_id_a,
 
 -- ----------------------------------------------------------
 
+CREATE TABLE user_blocks (
+    blocker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blocked_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (blocker_id, blocked_id)
+);
+
+CREATE INDEX idx_user_blocks_blocker_id_blocked_id ON user_blocks(blocker_id, blocked_id);
+
+-- ----------------------------------------------------------
+
 CREATE TABLE directors (
     id INTEGER PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL

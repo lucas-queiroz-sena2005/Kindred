@@ -94,14 +94,17 @@ export async function saveUserRanking(
   rankedItems: RankedItemInput[]
 ) {
   // --- Input Validation ---
-  // Ensure every item in the array is valid before starting a transaction.
   for (const item of rankedItems) {
     if (
       typeof item.movieId !== "number" ||
       typeof item.tier !== "number" ||
-      item.tier < 0 || item.tier > 5
+      item.tier < 0 ||
+      item.tier > 5
     ) {
-      throw new ApiError("Invalid 'rankedItems' payload. Each item must have a numeric 'movieId' and a 'tier' between 0 and 5.", 400);
+      throw new ApiError(
+        "Invalid 'rankedItems' payload. Each item must have a numeric 'movieId' and a 'tier' between 0 and 5.",
+        400
+      );
     }
   }
   const client = await pool.connect();
@@ -115,6 +118,27 @@ export async function saveUserRanking(
     );
     if (templateCheck.rows.length === 0) {
       throw new ApiError("Tierlist template not found.", 404);
+    }
+
+    if (rankedItems.length > 0) {
+      const movieIds = rankedItems.map((item) => item.movieId);
+      const validationQuery = `--sql
+        SELECT (
+            SELECT COUNT(movie_id)::int FROM template_movies 
+            WHERE template_id = $1 AND movie_id = ANY($2::int[])
+        ) = array_length($2::int[], 1) AS "all_ids_valid"
+      `;
+      const { rows } = await client.query(validationQuery, [
+        templateId,
+        movieIds,
+      ]);
+
+      if (!rows[0].all_ids_valid) {
+        throw new ApiError(
+          "One or more movies are invalid or do not belong to this tierlist.",
+          400
+        );
+      }
     }
 
     const {
@@ -152,11 +176,8 @@ export async function saveUserRanking(
     await recalculateProfileVector(userId);
     return { message: "Ranking saved successfully." };
   } catch (e) {
-    // If a query in the transaction fails, the client might no longer be queryable.
-    // This check prevents a noisy "bind message" error in the logs if the connection is lost.
-    // @ts-ignore - _queryable is not in the official types but is a reliable internal flag.
+    // @ts-ignore
     if (client && client._queryable) await client.query("ROLLBACK");
-
     throw e;
   } finally {
     client.release();

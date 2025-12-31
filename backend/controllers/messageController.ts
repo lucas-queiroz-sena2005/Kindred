@@ -3,6 +3,21 @@ import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { ApiError } from "../errors/customErrors.js";
 import * as MessageService from "../services/messageService.js";
 
+function validateRequest(req: AuthenticatedRequest) {
+  const userId = req.user!.id;
+  const targetIdParam = req.params.targetId || (req.query.targetId as string);
+  const targetId = parseInt(targetIdParam, 10);
+
+  if (isNaN(targetId)) {
+    throw new ApiError("Target ID must be a valid number.", 400);
+  }
+  if (userId === targetId) {
+    throw new ApiError("Cannot perform this action on self.", 400);
+  }
+
+  return { userId, targetId };
+}
+
 function validateGetListParams(req: AuthenticatedRequest) {
   const limitStr = req.query.limit as string | undefined;
   const limit = limitStr ? parseInt(limitStr, 10) : 50;
@@ -26,16 +41,7 @@ export async function getMessages(
   next: NextFunction,
 ) {
   try {
-    const userId = req.user!.id;
-    const targetIdParam = req.params.targetId || (req.query.targetId as string);
-    const targetId = parseInt(targetIdParam, 10);
-
-    if (isNaN(targetId)) {
-      throw new ApiError("Target ID must be a valid number.", 400);
-    }
-    if (userId === targetId) {
-      throw new ApiError("Cannot get messages from self.", 400);
-    }
+    const { userId, targetId } = validateRequest(req);
     const { limit, offset } = validateGetListParams(req);
 
     const messages = await MessageService.getMessages(
@@ -56,33 +62,19 @@ export async function sendMessage(
   next: NextFunction,
 ) {
   try {
-    if (!req.body) {
-      throw new ApiError("Request body is missing or not in JSON format.", 400);
-    }
-    const userId = req.user!.id;
-    const targetIdParam = req.params.targetId || (req.query.targetId as string);
-    const targetId = parseInt(targetIdParam, 10);
-    let message = req.body.message;
+    const { userId, targetId } = validateRequest(req);
+    const { message } = req.body;
 
     if (
-      typeof message === "object" &&
-      message !== null &&
-      "message" in message
+      !message ||
+      typeof message !== "string" ||
+      message.length < 1 ||
+      message.length > 255
     ) {
-      message = message.message;
-    }
-
-    if (!message) {
-      throw new ApiError("Message is required.", 400);
-    }
-    if (message.length < 1 || message.length > 255) {
-      throw new ApiError("Message too long.", 400);
-    }
-    if (isNaN(targetId)) {
-      throw new ApiError("Target ID must be a valid number.", 400);
-    }
-    if (userId === targetId) {
-      throw new ApiError("Cannot send message to self.", 400);
+      throw new ApiError(
+        "Message is required and must be a string between 1 and 255 characters.",
+        400,
+      );
     }
 
     const messages = await MessageService.sendMessage(

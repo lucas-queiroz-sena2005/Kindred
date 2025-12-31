@@ -21,8 +21,8 @@ export async function getKinListbyId(
 
   const sortColumn =
     sortBy === "overall"
-    ? `(1 - (other.profile_vector <=> tu.profile_vector))`
-    : `(1 - ( ((other.profile_vector::real[])${sliceString})::vector <=> ((tu.profile_vector::real[])${sliceString})::vector ))`;
+    ? `GREATEST(0, (1 - (other.profile_vector <=> tu.profile_vector)))`
+    : `GREATEST(0, (1 - ( ((other.profile_vector::real[])${sliceString})::vector <=> ((tu.profile_vector::real[])${sliceString})::vector )))`;
 
   
     
@@ -63,14 +63,14 @@ export async function compareKin(
   const segmentScoreQueries = Object.entries(FEATURE_CONFIG)
     .map(
       ([name, config]) =>
-        `(1 - ( ((u1.profile_vector::real[])${config.slice})::vector <=> ((u2.profile_vector::real[])${config.slice})::vector )) AS "${name}Score"`
+        `GREATEST(0, (1 - ( ((u1.profile_vector::real[])${config.slice})::vector <=> ((u2.profile_vector::real[])${config.slice})::vector ))) AS "${name}Score"`
     )
     .join(",\n");
 
   const query = `--sql
     SELECT
       -- 1. Overall Score (Total Taste DNA)
-      (1 - (u1.profile_vector <=> u2.profile_vector)) AS "overallScore",
+      GREATEST(0, (1 - (u1.profile_vector <=> u2.profile_vector))) AS "overallScore",
       ${segmentScoreQueries}
 
     FROM users AS u1, users AS u2

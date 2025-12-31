@@ -97,3 +97,39 @@ export async function cancelConnection(userId: number, targetId: number) {
   const { rows } = await pool.query(query, [userId, targetId]);
   return rows;
 }
+
+export async function blockUser(blockerId: number, blockedId: number) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const lowerId = Math.min(blockerId, blockedId);
+    const higherId = Math.max(blockerId, blockedId);
+
+    // Remove any existing connection
+    await client.query(
+      "DELETE FROM user_connections WHERE user_id_a = $1 AND user_id_b = $2",
+      [lowerId, higherId],
+    );
+
+    // Remove any pending connection requests between the two users
+    await client.query(
+      "DELETE FROM connection_request WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)",
+      [blockerId, blockedId],
+    );
+
+    // Block the user
+    const { rows } = await client.query(
+      "INSERT INTO user_blocks (blocker_id, blocked_id) VALUES ($1, $2) RETURNING *",
+      [blockerId, blockedId],
+    );
+
+    await client.query("COMMIT");
+    return rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
