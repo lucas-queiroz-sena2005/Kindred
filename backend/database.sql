@@ -58,6 +58,21 @@ CREATE INDEX idx_user_blocks_blocker_id_blocked_id ON user_blocks(blocker_id, bl
 
 -- ----------------------------------------------------------
 
+CREATE TYPE notification_type AS ENUM ('kin_request', 'kin_accepted', 'new_message');
+
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type notification_type NOT NULL,
+    actor_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+
+-- ----------------------------------------------------------
+
 CREATE TABLE directors (
     id INTEGER PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL

@@ -1,5 +1,6 @@
 import pool from "../db/db.js";
 import { ApiError } from "../errors/customErrors.js";
+import { createNotification } from "./notificationService.js";
 
 export async function askConnection(senderId: number, receiverId: number) {
   const existingUser = await pool.query<{ id: number }>(
@@ -40,6 +41,7 @@ export async function askConnection(senderId: number, receiverId: number) {
     higherId,
   ]);
   if (acceptResult.rows.length > 0) {
+    await createNotification(receiverId, "kin_accepted", senderId);
     return { status: "connected", message: "Connection established." };
   }
 
@@ -53,6 +55,7 @@ export async function askConnection(senderId: number, receiverId: number) {
   if (insertResult.rows.length === 0) {
     throw new ApiError("Connection request already sent.", 400);
   }
+  await createNotification(receiverId, "kin_request", senderId);
   return { status: "pending", message: "Connection request sent." };
 }
 

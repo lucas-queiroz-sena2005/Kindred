@@ -1,6 +1,7 @@
 import pool from "../db/db.js";
 import { Filter } from "bad-words";
 import { ApiError } from "../errors/customErrors.js";
+import { createNotification } from "./notificationService.js";
 
 const filter = new Filter();
 
@@ -87,7 +88,12 @@ export async function sendMessage(
 
   const query = `--sql
     INSERT INTO messages (sender_id, receiver_id, content)
-    VALUES ($1, $2, $3)`;
+    VALUES ($1, $2, $3)
+    RETURNING *`;
   const { rows } = await pool.query(query, [senderId, receiverId, message]);
-  return rows;
+  const newMessage = rows[0];
+
+  await createNotification(receiverId, "new_message", senderId);
+
+  return newMessage;
 }
