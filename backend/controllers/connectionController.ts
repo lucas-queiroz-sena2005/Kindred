@@ -110,3 +110,17 @@ export async function blockUser(
     next(error);
   }
 }
+
+export async function getStatus(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { userId, targetId } = validateRequest(req);
+    const result = await ConnectionService.getStatus(userId, targetId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}

@@ -109,13 +109,11 @@ export async function blockUser(blockerId: number, blockedId: number) {
     const lowerId = Math.min(blockerId, blockedId);
     const higherId = Math.max(blockerId, blockedId);
 
-    // Remove any existing connection
     await client.query(
       "DELETE FROM user_connections WHERE user_id_a = $1 AND user_id_b = $2",
       [lowerId, higherId],
     );
 
-    // Remove any pending connection requests between the two users
     await client.query(
       "DELETE FROM connection_request WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)",
       [blockerId, blockedId],
@@ -135,4 +133,49 @@ export async function blockUser(blockerId: number, blockedId: number) {
   } finally {
     client.release();
   }
+}
+
+export async function getStatus(userId: number, targetId: number) {
+  const blockQuery = `--sql
+    SELECT blocker_id FROM user_blocks
+    WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)
+  `;
+  const blockResult = await pool.query(blockQuery, [userId, targetId]);
+  if (blockResult.rows.length > 0) {
+    const blockerId = blockResult.rows[0].blocker_id;
+    return {
+      status: "blocked",
+      am_i_blocker: blockerId === userId,
+    };
+  }
+
+  const lowerId = Math.min(userId, targetId);
+  const higherId = Math.max(userId, targetId);
+  const connectionQuery = `--sql
+    SELECT 1 FROM user_connections
+    WHERE user_id_a = $1 AND user_id_b = $2
+  `;
+  const connectionResult = await pool.query(connectionQuery, [
+    lowerId,
+    higherId,
+  ]);
+  if (connectionResult.rows.length > 0) {
+    return { status: "connected" };
+  }
+
+  const requestQuery = `--sql
+    SELECT
+      CASE
+        WHEN sender_id = $1 THEN 'sent'
+        ELSE 'awaiting'
+      END AS status
+    FROM connection_request
+    WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)
+  `;
+  const requestResult = await pool.query(requestQuery, [userId, targetId]);
+  if (requestResult.rows.length > 0) {
+    return { status: requestResult.rows[0].status };
+  }
+
+  return { status: "none" };
 }
