@@ -7,7 +7,7 @@ import { ConversationListItemSkeleton } from "../components/ConversationListItem
 
 function MessagesPage(): React.ReactElement {
   const [selectedUser, setSelectedUser] = useState<ConversationUser | null>(
-    null
+    null,
   );
 
   const {
@@ -21,7 +21,7 @@ function MessagesPage(): React.ReactElement {
   });
 
   return (
-    <div className="flex h-[calc(100vh-100px)]">
+    <div className="flex h-[calc(100vh-200px)]">
       {/* Sidebar */}
       <div className="w-1/3 border-r border-neutral-200 dark:border-neutral-800">
         <div className="p-4 border-b border-neutral-200 dark:border-neutral-800">
