@@ -91,13 +91,14 @@ export async function rejectConnectionRequest(
 }
 
 export async function cancelConnection(userId: number, targetId: number) {
+  const lowerId = Math.min(userId, targetId);
+  const higherId = Math.max(userId, targetId);
   const query = `--sql
     DELETE FROM user_connections
-    WHERE user_id_a = $2 AND user_id_b = $1 OR
-        user_id_a = $1 AND user_id_b = $2
+    WHERE user_id_a = $1 AND user_id_b = $2
     RETURNING 1
   `;
-  const { rows } = await pool.query(query, [userId, targetId]);
+  const { rows } = await pool.query(query, [lowerId, higherId]);
   return rows;
 }
 
@@ -135,6 +136,14 @@ export async function blockUser(blockerId: number, blockedId: number) {
   }
 }
 
+export async function unblockUser(blockerId: number, blockedId: number) {
+  const { rows } = await pool.query(
+    "DELETE FROM user_blocks WHERE blocker_id = $1 AND blocked_id = $2 RETURNING *",
+    [blockerId, blockedId],
+  );
+  return rows[0];
+}
+
 export async function getStatus(userId: number, targetId: number) {
   const blockQuery = `--sql
     SELECT blocker_id FROM user_blocks
@@ -166,8 +175,8 @@ export async function getStatus(userId: number, targetId: number) {
   const requestQuery = `--sql
     SELECT
       CASE
-        WHEN sender_id = $1 THEN 'sent'
-        ELSE 'awaiting'
+        WHEN sender_id = $1 THEN 'pending_from_user'
+        ELSE 'pending_from_target'
       END AS status
     FROM connection_request
     WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)
@@ -177,5 +186,5 @@ export async function getStatus(userId: number, targetId: number) {
     return { status: requestResult.rows[0].status };
   }
 
-  return { status: "none" };
+  return { status: "not_connected" };
 }

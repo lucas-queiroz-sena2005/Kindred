@@ -87,3 +87,17 @@ export async function sendMessage(
     next(error);
   }
 }
+
+export async function getConversations(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const userId = req.user!.id;
+    const conversations = await MessageService.getConversations(userId);
+    res.status(200).json(conversations);
+  } catch (error) {
+    next(error);
+  }
+}

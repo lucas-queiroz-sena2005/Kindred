@@ -9,6 +9,7 @@ import AccountPage from "./pages/AccountPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import MessagesPage from "./pages/MessagesPage";
 import TierListPage from "./pages/TierListPage";
 import { AuthProvider } from "./components/AuthProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
@@ -27,6 +28,7 @@ function App() {
                 <Route path="/tierlists" element={<MyTierlistsPage />} />
                 <Route path="/kin" element={<KinPage />} />
                 <Route path="/account" element={<AccountPage />} />
+                <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/tierlists/:id" element={<TierListPage />} />

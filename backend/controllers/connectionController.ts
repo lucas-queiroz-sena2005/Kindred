@@ -111,6 +111,20 @@ export async function blockUser(
   }
 }
 
+export async function unblockUser(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { userId, targetId } = validateRequest(req);
+    const result = await ConnectionService.unblockUser(userId, targetId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getStatus(
   req: AuthenticatedRequest,
   res: Response,

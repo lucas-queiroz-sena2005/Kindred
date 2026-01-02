@@ -12,7 +12,8 @@ import type {
   TierlistResponse,
   TierListSummary,
 } from "./types/tierlist";
-import type { KinUser } from "./types/kin";
+import type { KinUser, ConnectionStatus } from "./types/kin";
+import { Message, ConversationUser } from "./types/messages";
 
 const axiosInstance = axios.create({
   baseURL: "/api",
@@ -127,8 +128,62 @@ async function getKin(params?: GetKinListParams): Promise<KinUser[]> {
   return response.data;
 }
 
+async function getMessages(
+  targetId: number,
+  limit = 50,
+  offset = 0
+): Promise<Message[]> {
+  const response = await axiosInstance.get(`/messages/${targetId}`, {
+    params: { limit, offset },
+  });
+  return response.data;
+}
+
+async function getConversations(): Promise<ConversationUser[]> {
+  const response = await axiosInstance.get("/messages/conversations");
+  return response.data;
+}
+
+async function sendMessage(
+  targetId: number,
+  message: string
+): Promise<Message> {
+  const response = await axiosInstance.post(`/messages/${targetId}`, {
+    message,
+  });
+  return response.data;
+}
+
+async function getConnectionStatus(targetId: number): Promise<ConnectionStatus> {
+  const response = await axiosInstance.get(`/connection/${targetId}/status`);
+  return response.data;
+}
+
+async function askConnection(targetId: number): Promise<void> {
+  await axiosInstance.post(`/connection/${targetId}/ask`);
+}
+
+async function rejectConnectionRequest(targetId: number): Promise<void> {
+  await axiosInstance.delete(`/connection/${targetId}/reject`);
+}
+
+async function cancelConnection(targetId: number): Promise<void> {
+  await axiosInstance.delete(`/connection/${targetId}/cancel`);
+}
+
+async function blockUser(targetId: number): Promise<void> {
+  await axiosInstance.post(`/connection/${targetId}/block`);
+}
+
+async function unblockUser(targetId: number): Promise<void> {
+  await axiosInstance.delete(`/connection/${targetId}/unblock`);
+}
+
 async function saveTierlist(tierlist: TierlistResponse): Promise<string> {
-  const response = await axiosInstance.post(`/tierlist/${tierlist.templateId}`, tierlist);
+  const response = await axiosInstance.post(
+    `/tierlist/${tierlist.templateId}`,
+    tierlist
+  );
   return response.data;
 }
 
@@ -145,6 +200,19 @@ export const api = {
     postTierlist: saveTierlist,
   },
   kin: {
-    getKin: getKin
-  }
+    getKin: getKin,
+  },
+  messages: {
+    getMessages: getMessages,
+    sendMessage: sendMessage,
+    getConversations: getConversations,
+  },
+  connections: {
+    getStatus: getConnectionStatus,
+    ask: askConnection,
+    reject: rejectConnectionRequest,
+    cancel: cancelConnection,
+    block: blockUser,
+    unblock: unblockUser,
+  },
 };

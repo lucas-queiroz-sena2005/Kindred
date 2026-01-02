@@ -47,6 +47,14 @@ function Navbar(): React.ReactElement {
             </li>
             <li>
               <Link
+                to="/messages"
+                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+              >
+                <span className="inline-block mr-2"></span> Messages
+              </Link>
+            </li>
+            <li>
+              <Link
                 to="/kin"
                 className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
               >
@@ -60,11 +68,6 @@ function Navbar(): React.ReactElement {
               >
                 <span className="inline-block mr-2"></span> Account
               </Link>
-            </li>
-            <li>
-              <button onClick={logout} className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                <span className="inline-block mr-2"></span> Logout
-              </button>
             </li>
           </>
         )}

@@ -97,3 +97,28 @@ export async function sendMessage(
 
   return newMessage;
 }
+
+export async function getConversations(userId: number) {
+  const query = `--sql
+    WITH last_message AS (
+      SELECT
+        CASE
+          WHEN sender_id = $1 THEN receiver_id
+          ELSE sender_id
+        END AS other_user_id,
+        MAX(created_at) AS last_message_time
+      FROM messages
+      WHERE sender_id = $1 OR receiver_id = $1
+      GROUP BY other_user_id
+    )
+    SELECT
+      u.id,
+      u.username,
+      lm.last_message_time AS "lastMessageAt"
+    FROM last_message lm
+    JOIN users u ON u.id = lm.other_user_id
+    ORDER BY lm.last_message_time DESC
+  `;
+  const { rows } = await pool.query(query, [userId]);
+  return rows;
+}
