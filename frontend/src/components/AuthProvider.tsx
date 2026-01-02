@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { api } from "../api";
 import type {
@@ -62,14 +62,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const value = {
-    isAuthenticated: !!user,
-    user,
-    isLoading,
-    login: handleLogin,
-    logout: handleLogout,
-    register: handleRegister,
-  };
+  const value = useMemo(
+    () => ({
+      isAuthenticated: !!user,
+      user,
+      isLoading,
+      login: handleLogin,
+      logout: handleLogout,
+      register: handleRegister,
+    }),
+    [user, isLoading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

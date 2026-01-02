@@ -14,8 +14,9 @@ import TierListPage from "./pages/TierListPage";
 import { AuthProvider } from "./components/AuthProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
 
+const queryClient = new QueryClient();
+
 function App() {
-  const queryClient = new QueryClient();
 
   return (
     <ThemeProvider>
