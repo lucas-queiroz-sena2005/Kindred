@@ -14,6 +14,7 @@ import type {
 } from "./types/tierlist";
 import type { KinUser, ConnectionStatus } from "./types/kin";
 import { Message, ConversationUser } from "./types/messages";
+import { Notification } from "./types/notifications";
 
 const axiosInstance = axios.create({
   baseURL: "/api",
@@ -187,6 +188,22 @@ async function saveTierlist(tierlist: TierlistResponse): Promise<string> {
   return response.data;
 }
 
+async function getNotifications(): Promise<Notification[]> {
+  const response = await axiosInstance.get<Notification[]>("/notifications");
+  return response.data;
+}
+
+async function getUnreadNotificationCount(): Promise<number> {
+  const response = await axiosInstance.get<{ count: number }>(
+    "/notifications/quantity",
+  );
+  return response.data.count;
+}
+
+async function markNotificationsAsRead(): Promise<void> {
+  await axiosInstance.post("/notifications/read");
+}
+
 export const api = {
   auth: {
     checkStatus: checkAuthStatus,
@@ -214,5 +231,10 @@ export const api = {
     cancel: cancelConnection,
     block: blockUser,
     unblock: unblockUser,
+  },
+  notifications: {
+    getUnreadCount: getUnreadNotificationCount,
+    getNotifications: getNotifications,
+    markAsRead: markNotificationsAsRead,
   },
 };
