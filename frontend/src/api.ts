@@ -200,10 +200,6 @@ async function getUnreadNotificationCount(): Promise<number> {
   return response.data.count;
 }
 
-async function markNotificationsAsRead(): Promise<void> {
-  await axiosInstance.post("/notifications/read");
-}
-
 export const api = {
   auth: {
     checkStatus: checkAuthStatus,
@@ -235,6 +231,5 @@ export const api = {
   notifications: {
     getUnreadCount: getUnreadNotificationCount,
     getNotifications: getNotifications,
-    markAsRead: markNotificationsAsRead,
   },
 };
