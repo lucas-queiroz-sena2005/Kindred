@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
-import { ConversationUser, Message } from "../types/messages";
+import type { ConversationUser, Message } from "../types/messages";
 import { useAuth } from "../hooks/useAuth";
 import ConnectionStatusButton from "./ConnectionStatusButton";
 
@@ -73,7 +73,7 @@ function Conversation({ user }: ConversationProps): React.ReactElement {
             >
               <div
                 className={`${
-                  msg.sender_id === currentUser?.id
+                  msg.sender_id == currentUser?.id
                     ? "bg-purple-600 text-white"
                     : "bg-neutral-200 dark:bg-neutral-700"
                 } rounded-lg py-2 px-4 max-w-xs`}

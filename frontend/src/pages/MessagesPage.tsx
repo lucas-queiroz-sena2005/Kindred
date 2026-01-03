@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
-import { ConversationUser } from "../types/messages";
+import type { ConversationUser } from "../types/messages";
 import Conversation from "../components/Conversation";
 import { ConversationListItemSkeleton } from "../components/ConversationListItemSkeleton";
 

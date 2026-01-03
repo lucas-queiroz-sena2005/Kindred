@@ -36,7 +36,7 @@ export async function getMessages(
     SELECT * FROM messages
     WHERE (sender_id = $1 AND receiver_id = $2) OR
         (receiver_id = $1 AND sender_id = $2)
-    ORDER BY created_at ASC
+    ORDER BY created_at DESC
     LIMIT $3
     OFFSET $4
     `;
@@ -46,8 +46,9 @@ export async function getMessages(
       limit,
       offset,
     ]);
+
     await client.query("COMMIT");
-    return rows;
+    return rows.reverse();
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
