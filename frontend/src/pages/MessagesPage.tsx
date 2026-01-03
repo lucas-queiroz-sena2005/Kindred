@@ -1,14 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import type { ConversationUser } from "../types/messages";
-import Conversation from "../components/Conversation";
 import { ConversationListItemSkeleton } from "../components/ConversationListItemSkeleton";
+import { Link, Outlet, useParams, useNavigate } from "react-router-dom";
 
 function MessagesPage(): React.ReactElement {
-  const [selectedUser, setSelectedUser] = useState<ConversationUser | null>(
-    null,
-  );
+  const { targetId } = useParams<{ targetId: string }>();
+  const navigate = useNavigate();
 
   const {
     data: conversations,
@@ -19,6 +18,12 @@ function MessagesPage(): React.ReactElement {
     queryKey: ["conversations"],
     queryFn: api.messages.getConversations,
   });
+
+  useEffect(() => {
+    if (!targetId && conversations && conversations.length > 0) {
+      navigate(`/messages/${conversations[0].id}`);
+    }
+  }, [conversations, targetId, navigate]);
 
   return (
     <div className="flex h-[calc(100vh-200px)]">
@@ -42,32 +47,24 @@ function MessagesPage(): React.ReactElement {
             </div>
           )}
           {conversations?.map((user) => (
-            <div
-              key={user.id}
-              className={`p-4 cursor-pointer ${
-                selectedUser?.id === user.id
-                  ? "bg-purple-100 dark:bg-purple-900"
-                  : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              }`}
-              onClick={() => setSelectedUser(user)}
-            >
-              <p className="font-semibold">{user.username}</p>
-            </div>
+            <Link to={`/messages/${user.id}`} key={user.id}>
+              <div
+                className={`p-4 cursor-pointer ${
+                  targetId && parseInt(targetId, 10) === user.id
+                    ? "bg-purple-100 dark:bg-purple-900"
+                    : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                }`}
+              >
+                <p className="font-semibold">{user.username}</p>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
 
       {/* Main Chat Area */}
       <div className="w-2/3 flex flex-col">
-        {selectedUser ? (
-          <Conversation user={selectedUser} />
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-neutral-500">
-              Select a conversation to start messaging.
-            </p>
-          </div>
-        )}
+        <Outlet context={{ conversations }} />
       </div>
     </div>
   );

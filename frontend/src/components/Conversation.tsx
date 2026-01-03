@@ -4,16 +4,21 @@ import { api } from "../api";
 import type { ConversationUser, Message } from "../types/messages";
 import { useAuth } from "../hooks/useAuth";
 import ConnectionStatusButton from "./ConnectionStatusButton";
+import { useParams, useOutletContext } from "react-router-dom";
 
-interface ConversationProps {
-  user: ConversationUser;
+interface OutletContextType {
+  conversations: ConversationUser[] | undefined;
 }
 
-function Conversation({ user }: ConversationProps): React.ReactElement {
+function Conversation(): React.ReactElement {
+  const { targetId } = useParams<{ targetId: string }>();
+  const { conversations } = useOutletContext<OutletContextType>();
   const { user: currentUser, isLoading: isAuthLoading } = useAuth();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const user = conversations?.find((c) => c.id === Number(targetId));
 
   const {
     data: messages = [],
@@ -21,16 +26,17 @@ function Conversation({ user }: ConversationProps): React.ReactElement {
     isError,
     error,
   } = useQuery<Message[], Error>({
-    queryKey: ["messages", user.id],
-    queryFn: () => api.messages.getMessages(user.id),
-    refetchInterval: 3000, // Poll for new messages every 3 seconds
+    queryKey: ["messages", targetId],
+    queryFn: () => api.messages.getMessages(Number(targetId)),
+    refetchInterval: 3000,
+    enabled: !!targetId,
   });
 
   const mutation = useMutation({
-    mutationFn: () => api.messages.sendMessage(user.id, message),
+    mutationFn: () => api.messages.sendMessage(Number(targetId), message),
     onSuccess: () => {
       setMessage("");
-      queryClient.invalidateQueries({ queryKey: ["messages", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["messages", targetId] });
     },
   });
 
@@ -44,6 +50,16 @@ function Conversation({ user }: ConversationProps): React.ReactElement {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  if (!targetId || !user) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-neutral-500">
+          Select a conversation to start messaging.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -13,6 +13,7 @@ import MessagesPage from "./pages/MessagesPage";
 import TierListPage from "./pages/TierListPage";
 import { AuthProvider } from "./components/AuthProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
+import Conversation from "./components/Conversation";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,9 @@ function App() {
                 <Route path="/tierlists" element={<MyTierlistsPage />} />
                 <Route path="/kin" element={<KinPage />} />
                 <Route path="/account" element={<AccountPage />} />
-                <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/messages" element={<MessagesPage />}>
+                  <Route path=":targetId" element={<Conversation />} />
+                </Route>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/tierlists/:id" element={<TierListPage />} />
