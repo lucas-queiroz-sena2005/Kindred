@@ -7,9 +7,11 @@ import ErrorMessage from "../components/ErrorMessage";
 import { useOnScrollToBottom } from "../hooks/useOnScrollToBottom";
 import { KinUserCardSkeleton } from "../components/KinUserCardSkeleton";
 import type { KinUser, CompareDetails } from "../types/kin";
+import { useClickOutside } from "../hooks/useClickOutside";
 
 function KinPage(): React.ReactElement {
   const [openId, setOpenId] = useState<number | null>(null);
+  const [messageOpenId, setMessageOpenId] = useState<number | null>(null);
 
   const {
     data: details,
@@ -22,8 +24,29 @@ function KinPage(): React.ReactElement {
     refetchOnWindowFocus: false,
   });
 
+  const closeAll = () => {
+    setOpenId(null);
+    setMessageOpenId(null);
+  };
+
+  const containerRef = useClickOutside<HTMLDivElement>(closeAll);
+
   function handleToggle(id: number) {
-    setOpenId((prev) => (prev === id ? null : id));
+    setOpenId((prev) => {
+      const newOpenId = prev === id ? null : id;
+      // Close message box when closing card
+      if (newOpenId === null) {
+        setMessageOpenId(null);
+      }
+      return newOpenId;
+    });
+  }
+
+  function handleMessageToggle(id: number) {
+    // Always ensure the main card is open when dealing with messages
+    setOpenId(id);
+    // Toggle the message part
+    setMessageOpenId((prev) => (prev === id ? null : id));
   }
 
   const PAGE_LIMIT = 20;
@@ -83,23 +106,27 @@ function KinPage(): React.ReactElement {
         </div>
       )}
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {kinList.map((kinUser: KinUser) => (
-          <KinUserCard
-            key={kinUser.id}
-            user={kinUser}
-            isOpen={openId === kinUser.id}
-            onToggle={() => handleToggle(kinUser.id)}
-            details={details}
-            isLoading={isComparasionLoading}
-            isError={isComparisonError}
-          />
-        ))}
-        {(isLoading || isFetchingNextPage) &&
-          [...Array(isLoading ? 6 : 3)].map((_, i) => (
-            <KinUserCardSkeleton key={i} />
+      <div ref={containerRef}>
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          {kinList.map((kinUser: KinUser) => (
+            <KinUserCard
+              key={kinUser.id}
+              user={kinUser}
+              isOpen={openId === kinUser.id}
+              onToggle={() => handleToggle(kinUser.id)}
+              isMessageOpen={messageOpenId === kinUser.id}
+              onMessageToggle={() => handleMessageToggle(kinUser.id)}
+              details={details}
+              isLoading={isComparasionLoading}
+              isError={isComparisonError}
+            />
           ))}
-      </section>
+          {(isLoading || isFetchingNextPage) &&
+            [...Array(isLoading ? 6 : 3)].map((_, i) => (
+              <KinUserCardSkeleton key={i} />
+            ))}
+        </section>
+      </div>
 
       {showNoMoreResults && (
         <div className="text-center py-8 text-neutral-500">
