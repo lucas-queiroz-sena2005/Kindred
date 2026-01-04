@@ -1,20 +1,16 @@
 import axios, { isAxiosError, AxiosError } from "axios";
 import type {
-  AxiosResponse // Importe AxiosResponse como tipo
+  AxiosResponse, // Importe AxiosResponse como tipo
 } from "axios";
-import type {
-  LoginCredentials,
-  RegisterCredentials,
-  User,
-} from "./types/auth";
+import type { LoginCredentials, RegisterCredentials, User } from "./types/auth";
 import type {
   TierListData,
   TierlistResponse,
   TierListSummary,
 } from "./types/tierlist";
-import type { KinUser, ConnectionStatus } from "./types/kin";
-import { Message, ConversationUser } from "./types/messages";
-import { Notification } from "./types/notifications";
+import type { KinUser, ConnectionStatus, CompareDetails } from "./types/kin";
+import type { Message, ConversationUser } from "./types/messages";
+import type { Notification } from "./types/notifications";
 
 const axiosInstance = axios.create({
   baseURL: "/api",
@@ -28,14 +24,21 @@ axiosInstance.interceptors.response.use(
       let errorMessage = "An unexpected API error occurred.";
 
       const responseData = error.response.data;
-      if (responseData && typeof responseData === 'object') {
-         const typedResponseData = responseData as { message?: string; error?: string };
-         errorMessage = typedResponseData.message || typedResponseData.error || errorMessage;
+      if (responseData && typeof responseData === "object") {
+        const typedResponseData = responseData as {
+          message?: string;
+          error?: string;
+        };
+        errorMessage =
+          typedResponseData.message || typedResponseData.error || errorMessage;
       }
 
       switch (error.response.status) {
         case 400:
-          errorMessage = errorMessage !== "An unexpected API error occurred." ? errorMessage : "Dados inválidos. Por favor, verifique suas entradas.";
+          errorMessage =
+            errorMessage !== "An unexpected API error occurred."
+              ? errorMessage
+              : "Dados inválidos. Por favor, verifique suas entradas.";
           break;
         case 401:
           errorMessage = "Não autorizado. Faça login novamente.";
@@ -44,28 +47,30 @@ axiosInstance.interceptors.response.use(
           errorMessage = "Acesso proibido.";
           break;
         case 404:
-          errorMessage = errorMessage !== "An unexpected API error occurred." ? errorMessage : "Recurso não encontrado.";
+          errorMessage =
+            errorMessage !== "An unexpected API error occurred."
+              ? errorMessage
+              : "Recurso não encontrado.";
           break;
         case 409:
           errorMessage = "Conflito: este recurso já existe.";
           break;
         case 500:
-          errorMessage = "Erro interno do servidor. Tente novamente mais tarde.";
+          errorMessage =
+            "Erro interno do servidor. Tente novamente mais tarde.";
           break;
-        default:
-          errorMessage = errorMessage;
       }
 
       error.message = errorMessage;
-
     } else if (error.request) {
-      error.message = "Não foi possível conectar ao servidor. Verifique sua conexão com a internet.";
+      error.message =
+        "Não foi possível conectar ao servidor. Verifique sua conexão com a internet.";
     } else {
       error.message = "Ocorreu um erro inesperado ao configurar a solicitação.";
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 async function checkAuthStatus(): Promise<{ user: User } | null> {
@@ -102,16 +107,21 @@ export interface GetTierlistListParams {
 }
 
 async function getTierlistList(
-  params?: GetTierlistListParams
+  params?: GetTierlistListParams,
 ): Promise<TierListSummary[]> {
-  const response = await axiosInstance.get<TierListSummary[]>("/tierlist/list", {
-    params,
-  });
+  const response = await axiosInstance.get<TierListSummary[]>(
+    "/tierlist/list",
+    {
+      params,
+    },
+  );
   return response.data;
 }
 
 async function getTierlist(tierlistId: number): Promise<TierListData> {
-  const response = await axiosInstance.get<TierListData>(`/tierlist/${tierlistId}`);
+  const response = await axiosInstance.get<TierListData>(
+    `/tierlist/${tierlistId}`,
+  );
   return response.data;
 }
 
@@ -129,10 +139,17 @@ async function getKin(params?: GetKinListParams): Promise<KinUser[]> {
   return response.data;
 }
 
+async function compareKin(targetId: number): Promise<CompareDetails> {
+  const response = await axiosInstance.get("/kin/compare/", {
+    params: { targetId },
+  });
+  return response.data;
+}
+
 async function getMessages(
   targetId: number,
   limit = 50,
-  offset = 0
+  offset = 0,
 ): Promise<Message[]> {
   const response = await axiosInstance.get(`/messages/${targetId}`, {
     params: { limit, offset },
@@ -147,7 +164,7 @@ async function getConversations(): Promise<ConversationUser[]> {
 
 async function sendMessage(
   targetId: number,
-  message: string
+  message: string,
 ): Promise<Message> {
   const response = await axiosInstance.post(`/messages/${targetId}`, {
     message,
@@ -155,7 +172,9 @@ async function sendMessage(
   return response.data;
 }
 
-async function getConnectionStatus(targetId: number): Promise<ConnectionStatus> {
+async function getConnectionStatus(
+  targetId: number,
+): Promise<ConnectionStatus> {
   const response = await axiosInstance.get(`/connection/${targetId}/status`);
   return response.data;
 }
@@ -183,7 +202,7 @@ async function unblockUser(targetId: number): Promise<void> {
 async function saveTierlist(tierlist: TierlistResponse): Promise<string> {
   const response = await axiosInstance.post(
     `/tierlist/${tierlist.templateId}`,
-    tierlist
+    tierlist,
   );
   return response.data;
 }
@@ -214,6 +233,7 @@ export const api = {
   },
   kin: {
     getKin: getKin,
+    compareKin: compareKin,
   },
   messages: {
     getMessages: getMessages,

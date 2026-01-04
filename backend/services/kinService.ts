@@ -12,7 +12,7 @@ export async function getKinListbyId(
   filter: string,
   sortBy: FeatureName | "overall",
   limit: number,
-  offset: number
+  offset: number,
 ) {
   const connectOnly = filter === "connected";
   const unconnectedOnly = filter === "unconnected";
@@ -21,11 +21,9 @@ export async function getKinListbyId(
 
   const sortColumn =
     sortBy === "overall"
-    ? `GREATEST(0, (1 - (other.profile_vector <=> tu.profile_vector)))`
-    : `GREATEST(0, (1 - ( ((other.profile_vector::real[])${sliceString})::vector <=> ((tu.profile_vector::real[])${sliceString})::vector )))`;
+      ? `GREATEST(0, (1 - (other.profile_vector <=> tu.profile_vector)))`
+      : `GREATEST(0, (1 - ( ((other.profile_vector::real[])${sliceString})::vector <=> ((tu.profile_vector::real[])${sliceString})::vector )))`;
 
-  
-    
   const query = `--sql
     WITH TargetUser AS (
         SELECT profile_vector FROM users WHERE id = $1
@@ -58,12 +56,12 @@ export async function getKinListbyId(
 
 export async function compareKin(
   userIdA: number,
-  userIdB: number
+  userIdB: number,
 ): Promise<KinCompareResult> {
   const segmentScoreQueries = Object.entries(FEATURE_CONFIG)
     .map(
       ([name, config]) =>
-        `GREATEST(0, (1 - ( ((u1.profile_vector::real[])${config.slice})::vector <=> ((u2.profile_vector::real[])${config.slice})::vector ))) AS "${name}Score"`
+        `GREATEST(0, (1 - ( ((u1.profile_vector::real[])${config.slice})::vector <=> ((u2.profile_vector::real[])${config.slice})::vector ))) AS "${name}Score"`,
     )
     .join(",\n");
 
@@ -90,16 +88,19 @@ export async function compareKin(
   if (rows.length === 0) {
     throw new ApiError(
       "One or both users not found or have no profile vector.",
-      404
+      404,
     );
   }
 
   const result = rows[0];
 
-  const segments = FEATURE_NAMES.reduce((acc, name) => {
-    acc[name] = result[`${name}Score`];
-    return acc;
-  }, {} as Record<FeatureName, number>);
+  const segments = FEATURE_NAMES.reduce(
+    (acc, name) => {
+      acc[name] = result[`${name}Score`];
+      return acc;
+    },
+    {} as Record<FeatureName, number>,
+  );
 
   return {
     overallScore: result.overallScore,

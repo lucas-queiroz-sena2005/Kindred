@@ -1,12 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { KinUserCard } from "../components/KinUserCard";
-import ErrorMessage from '../components/ErrorMessage';
+import ErrorMessage from "../components/ErrorMessage";
 import { useOnScrollToBottom } from "../hooks/useOnScrollToBottom";
 import { KinUserCardSkeleton } from "../components/KinUserCardSkeleton";
+import type { KinUser, CompareDetails } from "../types/kin";
 
 function KinPage(): React.ReactElement {
+  const [openId, setOpenId] = useState<number | null>(null);
+
+  const {
+    data: details,
+    isLoading: isComparasionLoading,
+    isError: isComparisonError,
+  } = useQuery<CompareDetails, Error>({
+    queryKey: ["compareKin", openId],
+    queryFn: () => api.kin.compareKin(openId!),
+    enabled: !!openId && !isNaN(openId),
+    refetchOnWindowFocus: false,
+  });
+
+  function handleToggle(id: number) {
+    setOpenId((prev) => (prev === id ? null : id));
+  }
+
   const PAGE_LIMIT = 20;
   const {
     data,
@@ -65,11 +84,21 @@ function KinPage(): React.ReactElement {
       )}
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {kinList.map((kinUser) => (
-          <KinUserCard key={kinUser.userId} user={kinUser} />
+        {kinList.map((kinUser: KinUser) => (
+          <KinUserCard
+            key={kinUser.id}
+            user={kinUser}
+            isOpen={openId === kinUser.id}
+            onToggle={() => handleToggle(kinUser.id)}
+            details={details}
+            isLoading={isComparasionLoading}
+            isError={isComparisonError}
+          />
         ))}
         {(isLoading || isFetchingNextPage) &&
-          [...Array(isLoading ? 6 : 3)].map((_, i) => <KinUserCardSkeleton key={i} />)}
+          [...Array(isLoading ? 6 : 3)].map((_, i) => (
+            <KinUserCardSkeleton key={i} />
+          ))}
       </section>
 
       {showNoMoreResults && (
