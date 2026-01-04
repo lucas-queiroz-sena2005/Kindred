@@ -15,6 +15,7 @@ function Topbar(): React.ReactElement {
     queryFn: api.notifications.getUnreadCount,
     enabled: isAuthenticated,
     initialData: 0,
+    refetchInterval: 5000,
   });
 
   const toggleDropdown = () => {
