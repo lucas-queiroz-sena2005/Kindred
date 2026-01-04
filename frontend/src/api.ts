@@ -139,6 +139,11 @@ async function getKin(params?: GetKinListParams): Promise<KinUser[]> {
   return response.data;
 }
 
+async function getKinCategories(): Promise<string[]> {
+  const response = await axiosInstance.get<string[]>("/kin/categories");
+  return response.data;
+}
+
 async function compareKin(targetId: number): Promise<CompareDetails> {
   const response = await axiosInstance.get("/kin/compare/", {
     params: { targetId },
@@ -234,6 +239,7 @@ export const api = {
   kin: {
     getKin: getKin,
     compareKin: compareKin,
+    getCategories: getKinCategories,
   },
   messages: {
     getMessages: getMessages,

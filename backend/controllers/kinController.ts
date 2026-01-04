@@ -91,6 +91,12 @@ export async function getKins(
   }
 }
 
+
+export function getKinCategories(req: Request, res: Response) {
+  const categories = ["overall", ...FEATURE_NAMES];
+  res.status(200).json(categories);
+}
+
 export async function compareKin(
   req: AuthenticatedRequest,
   res: Response,
