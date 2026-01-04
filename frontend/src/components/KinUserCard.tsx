@@ -84,6 +84,7 @@ export function KinUserCard({
               </button>
               <Link
                 to={`/messages/${user.id}`}
+                state={{ targetUser: user }}
                 onClick={(e) => e.stopPropagation()}
                 className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 z-10 relative"
               >

@@ -112,13 +112,22 @@ function ConnectionStatusButton({
         );
       case "not_connected":
         return (
-          <button
-            onClick={() => askMutation.mutate()}
-            disabled={askMutation.isPending}
-            className="text-sm text-purple-600 hover:text-purple-800 ml-4"
-          >
-            {askMutation.isPending ? "Connecting..." : "Connect"}
-          </button>
+          <>
+            <button
+              onClick={() => askMutation.mutate()}
+              disabled={askMutation.isPending}
+              className="text-sm text-purple-600 hover:text-purple-800 ml-4"
+            >
+              {askMutation.isPending ? "Connecting..." : "Connect"}
+            </button>
+            <button
+              onClick={() => blockMutation.mutate()}
+              disabled={blockMutation.isPending}
+              className="text-sm text-red-500 hover:text-red-700 ml-4"
+            >
+              {blockMutation.isPending ? "Blocking..." : "Block"}
+            </button>
+          </>
         );
       case "blocked":
         if (status.am_i_blocker) {

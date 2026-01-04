@@ -4,7 +4,7 @@ import { api } from "../api";
 import type { ConversationUser, Message } from "../types/messages";
 import { useAuth } from "../hooks/useAuth";
 import ConnectionStatusButton from "./ConnectionStatusButton";
-import { useParams, useOutletContext } from "react-router-dom";
+import { useParams, useOutletContext, useLocation } from "react-router-dom";
 
 interface OutletContextType {
   conversations: ConversationUser[] | undefined;
@@ -18,7 +18,11 @@ function Conversation(): React.ReactElement {
   const [message, setMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const user = conversations?.find((c) => c.id === Number(targetId));
+  const location = useLocation();
+  const targetUser = location.state?.targetUser;
+
+  const user =
+    conversations?.find((c) => c.id === Number(targetId)) || targetUser;
 
   const {
     data: messages = [],
@@ -37,6 +41,7 @@ function Conversation(): React.ReactElement {
     onSuccess: () => {
       setMessage("");
       queryClient.invalidateQueries({ queryKey: ["messages", targetId] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
 
@@ -51,7 +56,7 @@ function Conversation(): React.ReactElement {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  if (!targetId || !user) {
+  if (!targetId) {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-neutral-500">
