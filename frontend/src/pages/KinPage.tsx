@@ -43,10 +43,13 @@ function KinPage(): React.ReactElement {
   }
 
   function handleMessageToggle(id: number) {
-    // Always ensure the main card is open when dealing with messages
-    setOpenId(id);
-    // Toggle the message part
-    setMessageOpenId((prev) => (prev === id ? null : id));
+    setMessageOpenId((prev) => {
+      if (prev === id) {
+        return null; // Close if it's already open
+      }
+      setOpenId(id); // Ensure card details are open
+      return id; // Open this message box
+    });
   }
 
   const PAGE_LIMIT = 20;

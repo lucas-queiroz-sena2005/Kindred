@@ -7,7 +7,9 @@ interface KinMessagingProps {
   targetId: number;
 }
 
-export function KinMessaging({ targetId }: KinMessagingProps): React.ReactElement {
+export function KinMessaging({
+  targetId,
+}: KinMessagingProps): React.ReactElement {
   const [message, setMessage] = useState("");
   const queryClient = useQueryClient();
 
@@ -16,9 +18,8 @@ export function KinMessaging({ targetId }: KinMessagingProps): React.ReactElemen
       api.messages.sendMessage(targetId, newMessage),
     onSuccess: () => {
       setMessage("");
-      // Invalidate to refetch on the main messages page if the user navigates there
       queryClient.invalidateQueries({ queryKey: ["messages", targetId] });
-       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
 

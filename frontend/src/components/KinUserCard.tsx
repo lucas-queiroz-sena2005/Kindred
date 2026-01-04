@@ -47,34 +47,45 @@ export function KinUserCard({
     ...dynamicSegments,
   };
 
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggle();
+  };
+
   const handleButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onMessageToggle();
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 hover:shadow-md transition-shadow h-fit">
-      <article
-        onClick={onToggle}
-        className="flex justify-between items-start cursor-pointer"
-      >
+    <div
+      className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 hover:shadow-md transition-shadow h-fit cursor-pointer"
+      onClick={onToggle}
+    >
+      <article className="flex justify-between items-start">
         <div className="flex-grow">
           <h3 className="font-bold text-lg text-neutral-800">
             {user.username}
           </h3>
           <p className="text-sm text-neutral-500">Usuário compatível</p>
-          <div className="mt-2 pt-2 border-t border-neutral-100">
+          <div className="mt-4 pt-4 border-t border-neutral-100">
             <div className="flex items-center gap-2">
               <button
-                onClick={handleButtonClick}
-                className="px-3 py-2 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300 z-10 relative"
+                onClick={handleDetailsClick}
+                className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300 z-10 relative"
               >
-                {isMessageOpen ? "Close" : "Quick Message"}
+                {isOpen ? "Close" : "Details"}
+              </button>
+              <button
+                onClick={handleButtonClick}
+                className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300 z-10 relative"
+              >
+                {isMessageOpen ? "Cancel" : "Quick Message"}
               </button>
               <Link
                 to={`/messages/${user.id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 z-10 relative"
+                className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 z-10 relative"
               >
                 Go to Messages
               </Link>
