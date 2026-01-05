@@ -12,8 +12,10 @@ import type { KinUser, ConnectionStatus, CompareDetails } from "./types/kin";
 import type { Message, ConversationUser } from "./types/messages";
 import type { Notification } from "./types/notifications";
 
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 const axiosInstance = axios.create({
-  baseURL: "/api",
+  baseURL: BASE_URL,
   withCredentials: true,
 });
 
