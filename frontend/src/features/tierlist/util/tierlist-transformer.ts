@@ -3,7 +3,6 @@ import {
   TIER_ORDER,
   TIERS,
   API_TIER_ID_MAP,
-  TMDB_IMAGE_BASE_URL,
 } from "../constants/tier-constants";
 
 /**
@@ -30,14 +29,7 @@ export function transformToTierState(tierListData: TierListData): TierState {
     const tierId =
       movie.tier !== null ? API_TIER_ID_MAP[movie.tier] : "unranked";
 
-    // Construct the full poster path.
-    const transformedMovie = {
-      ...movie,
-      poster_path: movie.poster_path
-        ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}`
-        : null,
-    };
-    tierState[tierId]?.items.push(transformedMovie);
+    tierState[tierId]?.items.push(movie);
   }
 
   return tierState;

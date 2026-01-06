@@ -226,6 +226,17 @@ async function getUnreadNotificationCount(): Promise<number> {
   return response.data.count;
 }
 
+export interface TmdbConfig {
+  base_url: string;
+  secure_base_url: string;
+  poster_sizes: string[];
+}
+
+async function getTmdbConfig(): Promise<TmdbConfig> {
+  const response = await axiosInstance.get("/config/tmdb");
+  return response.data;
+}
+
 export const api = {
   auth: {
     checkStatus: checkAuthStatus,
@@ -259,5 +270,8 @@ export const api = {
   notifications: {
     getUnreadCount: getUnreadNotificationCount,
     getNotifications: getNotifications,
+  },
+  config: {
+    getTmdbConfig,
   },
 };

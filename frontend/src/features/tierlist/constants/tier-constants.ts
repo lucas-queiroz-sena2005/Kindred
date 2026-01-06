@@ -42,8 +42,3 @@ export const TIER_ORDER: string[] = [
 export const API_TIER_ID_MAP: Record<number, string> = Object.fromEntries(
   TIERS.map((t, i) => [i, t.id])
 );
-
-/**
- * The base URL for TMDB poster images.
- */
-export const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original/";

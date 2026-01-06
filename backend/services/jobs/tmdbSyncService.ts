@@ -9,6 +9,7 @@ const TMDB_BASE = "https://api.themoviedb.org/3";
 interface TmdbConfiguration {
   images: {
     base_url: string;
+    secure_base_url: string;
     poster_sizes: string[];
   };
 }
@@ -38,16 +39,17 @@ export const TmdbSyncService = {
         params: { api_key: TMDB_API_KEY },
       },
     );
-    const { base_url, poster_sizes } = response.data.images;
+    const { base_url, secure_base_url, poster_sizes } = response.data.images;
 
     await pool.query(
-      `INSERT INTO tmdb_config (id, base_url, poster_sizes, updated_at)
-             VALUES (1, $1, $2, NOW())
+      `INSERT INTO tmdb_config (id, base_url, secure_base_url, poster_sizes, updated_at)
+             VALUES (1, $1, $2, $3, NOW())
              ON CONFLICT (id) DO UPDATE SET 
              base_url = EXCLUDED.base_url, 
+             secure_base_url = EXCLUDED.secure_base_url,
              poster_sizes = EXCLUDED.poster_sizes, 
              updated_at = NOW()`,
-      [base_url, poster_sizes],
+      [base_url, secure_base_url, poster_sizes],
     );
   },
 
