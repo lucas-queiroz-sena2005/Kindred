@@ -1,6 +1,6 @@
 import { Droppable } from "@hello-pangea/dnd";
 import DataCard from "./Datacard";
-import type { Tier } from "../../../../types/tierlist";
+import type { Tier, Movie } from "../../../../types/tierlist";
 import { TIERS, UNRANKED_TIER } from "../../constants/tier-constants";
 import { useTmdbConfig } from "../../../../context/TmdbConfigProvider";
 
@@ -8,7 +8,12 @@ const TIER_METADATA_MAP = Object.fromEntries(
   [...TIERS, UNRANKED_TIER].map((t) => [t.id, t])
 );
 
-export default function TierDnd({ tier }: { tier: Tier }): React.ReactElement {
+interface TierDndProps {
+  tier: Tier;
+  onMovieSelect?: (movie: Movie) => void;
+}
+
+export default function TierDnd({ tier, onMovieSelect }: TierDndProps): React.ReactElement {
   const { getImageUrl } = useTmdbConfig();
   const tierMetadata = TIER_METADATA_MAP[tier.id];
   const tierColorClass = tierMetadata?.colorClass || "bg-gray-700";
@@ -28,9 +33,9 @@ export default function TierDnd({ tier }: { tier: Tier }): React.ReactElement {
             {tier.items.map((item, index) => (
               <DataCard
                 key={item.id}
-                id={String(item.id)}
+                item={item}
                 index={index}
-                imageUrl={getImageUrl(item.poster_path || "")}
+                onMovieSelect={onMovieSelect}
               />
             ))}
             {provided.placeholder}

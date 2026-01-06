@@ -8,11 +8,13 @@ import RankMovieModal from "./RankMovieModal";
 interface TierlistTapProps {
   tierState: TierState;
   setTierState: (updater: (state: TierState) => TierState) => void;
+  onMovieSelect?: (movie: Movie) => void;
 }
 
 export default function TierlistTap({
   tierState,
   setTierState,
+  onMovieSelect,
 }: TierlistTapProps): React.ReactElement {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
@@ -42,6 +44,13 @@ export default function TierlistTap({
 
     setSelectedMovie(null);
   };
+  
+  const handleSelect = (movie: Movie) => {
+    setSelectedMovie(movie);
+    if (onMovieSelect) {
+      onMovieSelect(movie);
+    }
+  };
 
   return (
     <div>
@@ -51,7 +60,7 @@ export default function TierlistTap({
           <SimpleTierRow
             key={tierId}
             tier={tierState[tierId]}
-            onSelectMovie={setSelectedMovie}
+            onSelectMovie={handleSelect}
           />
         ) : null
       )}

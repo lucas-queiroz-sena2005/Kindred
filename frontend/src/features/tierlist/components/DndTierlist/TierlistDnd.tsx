@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
-import type { TierState } from "../../../../types/tierlist";
+import type { TierState, Movie } from "../../../../types/tierlist";
 import { arrayMove, arrayTransfer } from "../../util/helpersDnd";
 import TierDnd from "./TierDnd";
 import { TIER_ORDER } from "../../constants/tier-constants";
@@ -8,11 +8,13 @@ import { TIER_ORDER } from "../../constants/tier-constants";
 interface TierlistDndProps {
   tierState: TierState;
   setTierState: React.Dispatch<React.SetStateAction<TierState | undefined>>;
+  onMovieSelect?: (movie: Movie) => void;
 }
 
 export default function TierlistDnd({
   tierState,
   setTierState,
+  onMovieSelect,
 }: TierlistDndProps): React.ReactElement {
   const onDragEnd = useCallback(
     ({ source, destination }: DropResult) => {
@@ -66,7 +68,7 @@ export default function TierlistDnd({
         {TIER_ORDER.map((tierId) => {
           const tier = tierState[tierId];
           // Render only if the tier data exists, preventing potential crashes.
-          return tier ? <TierDnd key={tierId} tier={tier} /> : null;
+          return tier ? <TierDnd key={tierId} tier={tier} onMovieSelect={onMovieSelect} /> : null;
         })}
       </div>
     </DragDropContext>
