@@ -1,32 +1,50 @@
 import React from 'react';
-import { Movie } from '../../../types/tierlist';
+import { useTierListPage } from '../context/TierListPageProvider';
 import { useTmdbConfig } from '../../../context/TmdbConfigProvider';
 
-interface MovieDetailSidebarProps {
-  movie: Movie | null;
-  onClose: () => void;
-}
-
-export const MovieDetailSidebar: React.FC<MovieDetailSidebarProps> = ({ movie, onClose }) => {
+export const MovieDetailSidebar: React.FC = () => {
+  const { selectedMovie, setSelectedMovie } = useTierListPage();
   const { getImageUrl } = useTmdbConfig();
 
-  if (!movie) {
+  const handleClose = () => {
+    setSelectedMovie(null);
+  };
+
+  if (!selectedMovie) {
     return (
-      <div className="w-64 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+      <div className="w-64 p-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
         <h3 className="font-bold text-lg mb-2">Movie Details</h3>
-        <p className="text-gray-500">Select a movie to see its details.</p>
+        <p className="text-neutral-500">Select a movie to see its details.</p>
       </div>
     );
   }
 
-  const tmdbLink = `https://www.themoviedb.org/movie/${movie.id}`;
+  const tmdbLink = `https://www.themoviedb.org/movie/${selectedMovie.id}`;
+  const imageUrl = getImageUrl(selectedMovie.poster_path || '', 'w342');
 
   return (
-    <div className="w-64 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg relative">
-      <button onClick={onClose} className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 font-bold text-xl">&times;</button>
-      <h3 className="font-bold text-lg mb-2">{movie.title} ({movie.release_year})</h3>
-      <img src={getImageUrl(movie.poster_path || '', 'w342')} alt={movie.title} className="w-full rounded-md mb-4" />
-      <a href={tmdbLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+    <div className="w-64 p-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg relative">
+      <button 
+        onClick={handleClose} 
+        className="absolute top-2 right-2 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 font-bold text-xl"
+        aria-label="Close movie details"
+      >
+        &times;
+      </button>
+      <h3 className="font-bold text-lg mb-2">{selectedMovie.title} ({selectedMovie.release_year})</h3>
+      {imageUrl && (
+        <img 
+          src={imageUrl} 
+          alt={selectedMovie.title} 
+          className="w-full rounded-md mb-4" 
+        />
+      )}
+      <a 
+        href={tmdbLink} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="text-purple-600 dark:text-purple-400 hover:underline"
+      >
         View on TMDB
       </a>
     </div>

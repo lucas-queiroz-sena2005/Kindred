@@ -6,6 +6,7 @@ import type { TierState, TierListData, Movie } from "../../../types/tierlist";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { transformToTierState, transformToTierData } from "../util/tierlist-transformer";
 import { api } from "../../../api";
+import { useTierListPage } from "../context/TierListPageProvider";
 
 type InteractionMode = "auto" | "drag" | "tap";
 const MODES: InteractionMode[] = ["auto", "drag", "tap"];
@@ -13,14 +14,13 @@ const MODES: InteractionMode[] = ["auto", "drag", "tap"];
 interface TierListProps {
   templateData: TierListData | undefined;
   isLoading: boolean;
-  onMovieSelect?: (movie: Movie) => void;
 }
 
 export function TierList({
   templateData,
   isLoading,
-  onMovieSelect,
 }: TierListProps): React.ReactElement {
+  const { setSelectedMovie } = useTierListPage();
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const navigate = useNavigate();
   const [mode, setMode] = useState<InteractionMode>("auto");
@@ -87,12 +87,12 @@ export function TierList({
       </div>
 
       {effectiveMode === "drag" && (
-        <TierlistDnd tierState={tierState} setTierState={setTierState} onMovieSelect={onMovieSelect} />
+        <TierlistDnd tierState={tierState} setTierState={setTierState} onMovieSelect={setSelectedMovie} />
       )}
       {effectiveMode === "tap" && (
         <TierlistTap
           tierState={tierState}
-          onMovieSelect={onMovieSelect}
+          onMovieSelect={setSelectedMovie}
           setTierState={(updater) => {
             // We wrap the original setTierState to ensure the updater function
             // inside TierlistTap never receives an undefined state.
@@ -120,3 +120,4 @@ export function TierList({
     </>
   );
 }
+

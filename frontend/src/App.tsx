@@ -13,6 +13,7 @@ import MessagesPage from "./pages/MessagesPage";
 import TierListPage from "./pages/TierListPage";
 import { AuthProvider } from "./components/AuthProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
+import { TmdbConfigProvider } from "./context/TmdbConfigProvider";
 import Conversation from "./components/Conversation";
 
 const queryClient = new QueryClient();
@@ -23,23 +24,25 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route index element={<FeedPage />} />
-                <Route path="/tierlists" element={<MyTierlistsPage />} />
-                <Route path="/kin" element={<KinPage />} />
-                <Route path="/account" element={<AccountPage />} />
-                <Route path="/messages" element={<MessagesPage />}>
-                  <Route path=":targetId" element={<Conversation />} />
+          <TmdbConfigProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route index element={<FeedPage />} />
+                  <Route path="/tierlists" element={<MyTierlistsPage />} />
+                  <Route path="/kin" element={<KinPage />} />
+                  <Route path="/account" element={<AccountPage />} />
+                  <Route path="/messages" element={<MessagesPage />}>
+                    <Route path=":targetId" element={<Conversation />} />
+                  </Route>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/tierlists/:id" element={<TierListPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Route>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/tierlists/:id" element={<TierListPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+              </Routes>
+            </BrowserRouter>
+          </TmdbConfigProvider>
         </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { api } from '../api';
-import { TmdbConfig } from '../api';
+import type { TmdbConfig } from '../api';
 
 interface TmdbConfigContextType {
   config: TmdbConfig | null;
