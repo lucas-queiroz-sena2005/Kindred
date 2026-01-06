@@ -5,6 +5,8 @@ import apiRoutes from "../routes/index.js";
 import { ApiError } from "../errors/customErrors.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { startJobs } from "../jobs/index.js";
+import { TmdbSyncService } from "../services/jobs/tmdbSyncService.js";
 
 const PORT = process.env.PORT || 3001;
 const app: Express = express();
@@ -19,6 +21,7 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.static("public"));
 app.use("/api", apiRoutes);
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error("🔴 Error caught by global handler:", err.stack);
 
@@ -62,6 +65,8 @@ async function testDatabaseConnection() {
 
 async function startServer() {
   await testDatabaseConnection();
+  await TmdbSyncService.updateConfiguration().catch(console.error);
+  startJobs();
   app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
   });
