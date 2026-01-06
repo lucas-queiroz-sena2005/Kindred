@@ -62,9 +62,7 @@ export function TierList({
   }
 
   function handleCancel() {
-    if (initialTierState) {
-      setTierState(initialTierState);
-    }
+    navigate(-1);
   }
 
   // Determine the effective interaction mode based on user selection and screen size.

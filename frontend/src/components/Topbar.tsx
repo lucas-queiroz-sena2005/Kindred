@@ -54,7 +54,6 @@ function Topbar(): React.ReactElement {
             {isDropdownOpen && <NotificationDropdown />}
           </div>
         )}
-        <ThemeToggleButton />
       </div>
     </header>
   );

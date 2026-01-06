@@ -15,6 +15,7 @@ import { AuthProvider } from "./components/AuthProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { TmdbConfigProvider } from "./context/TmdbConfigProvider";
 import Conversation from "./components/Conversation";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -28,16 +29,18 @@ function App() {
             <BrowserRouter>
               <Routes>
                 <Route element={<Layout />}>
-                  <Route index element={<FeedPage />} />
-                  <Route path="/tierlists" element={<MyTierlistsPage />} />
-                  <Route path="/kin" element={<KinPage />} />
-                  <Route path="/account" element={<AccountPage />} />
-                  <Route path="/messages" element={<MessagesPage />}>
-                    <Route path=":targetId" element={<Conversation />} />
+                  <Route element={<ProtectedRoute />}>
+                    <Route index element={<FeedPage />} />
+                    <Route path="/tierlists" element={<MyTierlistsPage />} />
+                    <Route path="/kin" element={<KinPage />} />
+                    <Route path="/account" element={<AccountPage />} />
+                    <Route path="/messages" element={<MessagesPage />}>
+                      <Route path=":targetId" element={<Conversation />} />
+                    </Route>
+                    <Route path="/tierlists/:id" element={<TierListPage />} />
                   </Route>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/tierlists/:id" element={<TierListPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>
@@ -50,3 +53,4 @@ function App() {
 }
 
 export default App;
+

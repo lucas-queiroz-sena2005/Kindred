@@ -5,6 +5,7 @@ import Topbar from "./Topbar";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { useAuth } from "../hooks/useAuth";
+import Footer from "./Footer";
 
 function Layout(): React.ReactElement {
   const { isAuthenticated } = useAuth();
@@ -24,12 +25,13 @@ function Layout(): React.ReactElement {
   }, [notificationCount]);
 
   return (
-    <div className="min-h-screen font-sans bg-neutral-50 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50">
+    <div className="min-h-screen font-sans bg-neutral-50 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50 flex flex-col">
       <Topbar />
       <Navbar />
-      <main className="w-full max-w-6xl mx-auto p-8">
+      <main className="w-full max-w-6xl mx-auto p-8 flex-grow">
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 }
