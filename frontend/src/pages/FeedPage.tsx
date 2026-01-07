@@ -4,6 +4,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useOnScrollToBottom } from "../hooks/useOnScrollToBottom";
 import { TemplateCard } from "../components/TemplateCard";
 import { TemplateCardSkeleton } from "../components/TemplateCardSkeleton";
+import ErrorMessage from "../components/ErrorMessage";
 
 function FeedPage(): React.ReactElement {
   const PAGE_LIMIT = 10;
@@ -44,10 +45,10 @@ function FeedPage(): React.ReactElement {
     <>
       <h1 className="text-3xl font-bold mb-4">Feed</h1>
 
-      {isError && <p className="text-red-500">Error: {error.message}</p>}
+      {isError && <ErrorMessage message={error.message} />}
 
       {showEmptyState && (
-        <div>There are no templates available right now.</div>
+        <ErrorMessage message="There are no templates available right now." variant="info" />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -60,7 +61,7 @@ function FeedPage(): React.ReactElement {
           [...Array(isLoading ? 6 : 3)].map((_, i) => <TemplateCardSkeleton key={i} />)}
       </div>
 
-      {showNoMoreResults && <div>No more tierlists to show.</div>}
+      {showNoMoreResults && <ErrorMessage message="No more tierlists to show." variant="info" className="mt-4 mb-0" />}
     </>
   );
 }

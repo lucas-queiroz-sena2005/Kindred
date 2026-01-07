@@ -30,8 +30,8 @@ function LoginPage(): React.ReactElement {
   }
 
   return (
-    <div className="p-8 bg-white rounded shadow-md w-full max-w-sm mx-auto mt-10">
-      <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
+    <div className="p-8 bg-neutral-100 dark:bg-neutral-800 rounded-lg shadow-md w-full max-w-sm mx-auto mt-10">
+      <h1 className="text-3xl font-bold mb-6 text-center text-neutral-900 dark:text-neutral-100">Login</h1>
       <AuthForm
         fields={loginFields}
         initialState={initialState}
@@ -39,13 +39,7 @@ function LoginPage(): React.ReactElement {
         onSuccess={handleLoginSuccess}
         submitButtonText="Login"
         submittingButtonText="Logging in..."
-        preFormContent={
-          location.state?.message && (
-            <h3 className="text-green-500 text-center mb-4">
-              {location.state.message}
-            </h3>
-          )
-        }
+        successMessage={location.state?.message}
       >
         <p className="text-center text-sm mt-4">
           Don't have an account?{" "}

@@ -67,7 +67,7 @@ export function KinUserCard({
           <h3 className="font-bold text-lg text-neutral-800">
             {user.username}
           </h3>
-          <p className="text-sm text-neutral-500">Usuário compatível</p>
+          <p className="text-sm text-neutral-500">Compatible User</p>
           <div className="mt-4 pt-4 border-t border-neutral-100">
             <div className="flex items-center gap-2">
               <button

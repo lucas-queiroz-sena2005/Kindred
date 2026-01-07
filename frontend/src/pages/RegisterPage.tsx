@@ -28,8 +28,8 @@ function RegisterPage(): React.ReactElement {
   };
 
   return (
-    <div className="p-8 bg-white rounded shadow-md w-full max-w-sm mx-auto mt-10">
-      <h1 className="text-2xl font-bold mb-6 text-center">Create Account</h1>
+    <div className="p-8 bg-neutral-100 dark:bg-neutral-800 rounded-lg shadow-md w-full max-w-sm mx-auto mt-10">
+      <h1 className="text-3xl font-bold mb-6 text-center text-neutral-900 dark:text-neutral-100">Create Account</h1>
       <AuthForm
         fields={registerFields}
         initialState={initialState}

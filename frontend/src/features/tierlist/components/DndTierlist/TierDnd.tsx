@@ -26,7 +26,7 @@ export default function TierDnd({ tier, onMovieSelect }: TierDndProps): React.Re
       <Droppable droppableId={tier.id} direction="horizontal">
         {(provided) => (
           <div
-            className="pl-4 flex flex-wrap items-center gap-4 border w-full select-none"
+            className="pl-4 flex flex-nowrap items-center gap-4 border w-full select-none overflow-x-auto"
             ref={provided.innerRef}
             {...provided.droppableProps}
           >

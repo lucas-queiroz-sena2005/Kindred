@@ -3,9 +3,10 @@ import React from 'react';
 interface ErrorMessageProps {
   message: string;
   variant?: 'error' | 'warning' | 'info';
+  className?: string;
 }
 
-const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, variant = 'error' }) => {
+const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, variant = 'error', className }) => {
   const baseClasses = "p-4 mb-4 rounded-lg text-center";
   const variantClasses = {
     error: "bg-red-50 border border-red-200 text-red-700",
@@ -14,7 +15,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, variant = 'error' 
   };
 
   return (
-    <div className={`${baseClasses} ${variantClasses[variant]}`}>
+    <div className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
       <p>{message}</p>
     </div>
   );

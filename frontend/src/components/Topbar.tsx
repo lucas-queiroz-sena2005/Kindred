@@ -41,10 +41,11 @@ function Topbar(): React.ReactElement {
   return (
     <header className="bg-neutral-100 border-b border-neutral-200 dark:bg-neutral-950 dark:border-neutral-800">
       <div className="mx-auto flex items-center gap-4 p-4">
-        <h1 className="text-2xl font-bold tracking-tight">Kindred</h1>
+        <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
+          Kindred
+        </h1>
 
         <div className="flex-1"></div>
-
         {isAuthenticated && (
           <div className="relative" ref={dropdownRef}>
             <button onClick={toggleDropdown} className="text-xl">

@@ -212,9 +212,7 @@ function KinPage(): React.ReactElement {
       </div>
 
       {showNoMoreResults && (
-        <div className="text-center py-8 text-neutral-500">
-          No more kin to show.
-        </div>
+        <ErrorMessage message="No more kin to show." variant="info" className="mt-4 mb-0" />
       )}
     </>
   );

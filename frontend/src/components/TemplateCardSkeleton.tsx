@@ -24,7 +24,7 @@ export function TemplateCardSkeleton({
   );
 
   return (
-    <div className="h-60 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm flex flex-col overflow-hidden">
+    <div className="h-60 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm flex flex-col overflow-hidden transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
       {content}
     </div>
   );

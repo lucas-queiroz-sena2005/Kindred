@@ -17,7 +17,7 @@ export function TemplateCard(templateData: TierListSummary): React.ReactElement 
   return (
     <Link
       to={`/tierlists/${id}`}
-      className="hover:shadow-md"
+      className="group"
       aria-label={isRanked ? `View your ranking for ${title}` : `Rank now: ${title}`}
     >
       <TemplateCardSkeleton>
@@ -39,10 +39,10 @@ export function TemplateCard(templateData: TierListSummary): React.ReactElement 
           )}
 
           <div
-            className={`w-full text-center font-semibold py-2 px-4 rounded-md text-sm ${
+            className={`w-full text-center font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 ${
               isRanked
-                ? "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                : "bg-purple-600 text-white"
+                ? "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 group-hover:bg-neutral-300 dark:group-hover:bg-neutral-700"
+                : "bg-purple-600 text-white group-hover:bg-purple-700"
             }`}
           >
             {isRanked ? "Edit Ranking" : "Rank Now"}

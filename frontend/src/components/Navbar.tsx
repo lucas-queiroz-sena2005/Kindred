@@ -1,9 +1,11 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 function Navbar(): React.ReactElement {
   const { isAuthenticated, logout } = useAuth();
+
+  const activeClassName = "text-purple-600 dark:text-purple-400 font-semibold";
 
   return (
     <nav className="bg-white border-b border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800">
@@ -11,63 +13,78 @@ function Navbar(): React.ReactElement {
         {!isAuthenticated ? (
           <>
             <li>
-              <Link
+              <NavLink
                 to="/login"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                className={({ isActive }) =>
+                  `hover:text-purple-600 dark:hover:text-purple-400 transition-colors ${isActive ? activeClassName : ""}`
+                }
               >
-                <span className="inline-block mr-2"></span> Login
-              </Link>
+                Login
+              </NavLink>
             </li>
             <li>
-              <Link
+              <NavLink
                 to="/register"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                className={({ isActive }) =>
+                  `hover:text-purple-600 dark:hover:text-purple-400 transition-colors ${isActive ? activeClassName : ""}`
+                }
               >
-                <span className="inline-block mr-2"></span> Register
-              </Link>
+                Register
+              </NavLink>
             </li>
           </>
         ) : (
           <>
             <li>
-              <Link
+              <NavLink
                 to="/"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                end
+                className={({ isActive }) =>
+                  `hover:text-purple-600 dark:hover:text-purple-400 transition-colors ${isActive ? activeClassName : ""}`
+                }
               >
-                <span className="inline-block mr-2"></span> Feed
-              </Link>
+                Feed
+              </NavLink>
             </li>
             <li>
-              <Link
+              <NavLink
                 to="/tierlists"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                className={({ isActive }) =>
+                  `hover:text-purple-600 dark:hover:text-purple-400 transition-colors ${isActive ? activeClassName : ""}`
+                }
               >
-                <span className="inline-block mr-2"></span> My Tierlists
-              </Link>
+                My Tierlists
+              </NavLink>
             </li>
             <li>
-              <Link
+              <NavLink
                 to="/messages"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                className={({ isActive }) =>
+                  `hover:text-purple-600 dark:hover:text-purple-400 transition-colors ${isActive ? activeClassName : ""}`
+                }
               >
-                <span className="inline-block mr-2"></span> Messages
-              </Link>
+                Messages
+              </NavLink>
             </li>
             <li>
-              <Link
+              <NavLink
                 to="/kin"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                className={({ isActive }) =>
+                  `hover:text-purple-600 dark:hover:text-purple-400 transition-colors ${isActive ? activeClassName : ""}`
+                }
               >
-                <span className="inline-block mr-2"></span> Kin
-              </Link>
+                Kin
+              </NavLink>
             </li>
             <li>
-              <Link
+              <NavLink
                 to="/account"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                className={({ isActive }) =>
+                  `hover:text-purple-600 dark:hover:text-purple-400 transition-colors ${isActive ? activeClassName : ""}`
+                }
               >
-                <span className="inline-block mr-2"></span> Account
-              </Link>
+                Account
+              </NavLink>
             </li>
           </>
         )}
@@ -77,3 +94,4 @@ function Navbar(): React.ReactElement {
 }
 
 export default Navbar;
+

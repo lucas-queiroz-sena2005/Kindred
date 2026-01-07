@@ -6,6 +6,7 @@ import { api } from "../api";
 import type { TierListData } from "../types/tierlist";
 import { MovieDetailSidebar } from "../features/tierlist/components/MovieDetailSidebar";
 import { TierListPageProvider } from "../features/tierlist/context/TierListPageProvider";
+import ErrorMessage from "../components/ErrorMessage";
 
 function TierListPage(): React.ReactElement {
   const { id } = useParams();
@@ -19,15 +20,13 @@ function TierListPage(): React.ReactElement {
 
   if (!tierlistId || isNaN(tierlistId)) {
     return (
-      <p className="text-center py-8 text-red-500">
-        Invalid or no tierlist ID provided.
-      </p>
+      <ErrorMessage message="Invalid or no tierlist ID provided." />
     );
   }
 
   if (isError) {
     return (
-      <p className="text-center py-8 text-red-500">Error: {error.message}</p>
+      <ErrorMessage message={error.message} />
     );
   }
 
