@@ -3,61 +3,71 @@ export const k_DAMPENING_FACTOR = 3;
 
 // Tier weight map 'tier' (0-5)
 export const TIER_WEIGHTS = {
-  0: 3,  // S
-  1: 2,  // A
-  2: 1,  // B
-  3: 0,  // C
+  0: 3, // S
+  1: 2, // A
+  2: 1, // B
+  3: 0, // C
   4: -1, // D
-  5: -2  // F
+  5: -2, // F
 };
 
 export type FeatureName = "genre" | "decade" | "director";
 
 export const FEATURE_CONFIG: Record<FeatureName, { slice: string }> = {
-  genre:    { slice: '[0:18]' },
-  decade:   { slice: '[19:29]' },
-  director: { slice: '[30:255]' },
+  genre: { slice: "[0:18]" },
+  decade: { slice: "[19:29]" },
+  director: { slice: "[30:255]" },
 };
 
 export const FEATURE_NAMES = Object.keys(FEATURE_CONFIG) as FeatureName[];
 
 export const FEATURE_MAP = {
-  'Action': 0,
-  'Comedy': 1,
-  'Drama': 2,
-  'Fantasy': 3,
-  'Horror': 4,
-  'Mystery': 5,
-  'Romance': 6,
-  'Thriller': 7,
-  'Western': 8,
-  'Science Fiction': 9,
-  'Adventure': 10,
-  'Animation': 11,
-  'Crime': 12,
-  'Family': 13,
-  'History': 14,
-  'Music': 15,
-  'War': 16,
-  'Documentary': 17,
-  'TV Movie': 18,
+  Action: 0,
+  Comedy: 1,
+  Drama: 2,
+  Fantasy: 3,
+  Horror: 4,
+  Mystery: 5,
+  Romance: 6,
+  Thriller: 7,
+  Western: 8,
+  "Science Fiction": 9,
+  Adventure: 10,
+  Animation: 11,
+  Crime: 12,
+  Family: 13,
+  History: 14,
+  Music: 15,
+  War: 16,
+  Documentary: 17,
+  "TV Movie": 18,
 
   // Decades
-  '1920': 19,
-  '1930': 20,
-  '1940': 21,
-  '1950': 22,
-  '1960': 23,
-  '1970': 24,
-  '1980': 25,
-  '1990': 26,
-  '2000': 27,
-  '2010': 28,
-  '2020': 29,
+  "1920": 19,
+  "1930": 20,
+  "1940": 21,
+  "1950": 22,
+  "1960": 23,
+  "1970": 24,
+  "1980": 25,
+  "1990": 26,
+  "2000": 27,
+  "2010": 28,
+  "2020": 29,
 
-  // Directors
-  'Christopher Nolan': 30,
-  'Denis Villeneuve': 31,
-  'Martin Scorsese': 32,
-  // ... (etc.)
+  "Christopher Nolan": 30,
+  "Denis Villeneuve": 31,
+  "Martin Scorsese": 32,
+  "Quentin Tarantino": 33, // TMDB ID: 138
+  "Alfred Hitchcock": 34, // TMDB ID: 2636
+  "Hayao Miyazaki": 35, // TMDB ID: 608
+  "Greta Gerwig": 36, // TMDB ID: 9543
+  "Wes Anderson": 37, // TMDB ID: 5655
+  "Ari Aster": 38, // TMDB ID: 1250254
+  "Jordan Peele": 39, // TMDB ID: 1252129
+  "Francis Ford Coppola": 40, // TMDB ID: 1776
+  "James Gunn": 41, // TMDB ID: 15277
+  "Steven Spielberg": 42, // TMDB ID: 488
+  "David Fincher": 43, // TMDB ID: 7467
+  "Bong Joon-ho": 44, // TMDB ID: 21684
 };

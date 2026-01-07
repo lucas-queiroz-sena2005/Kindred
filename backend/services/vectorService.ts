@@ -20,7 +20,7 @@ interface UserRankingFeature {
  */
 async function getAllUserRankings(
   client: PoolClient,
-  userId: number
+  userId: number,
 ): Promise<UserRankingFeature[]> {
   const { rows } = await client.query<UserRankingFeature>(
     `--sql
@@ -40,7 +40,7 @@ async function getAllUserRankings(
     WHERE ur.user_id = $1
     GROUP BY ri.id, ri.tier;
     `,
-    [userId]
+    [userId],
   );
   return rows;
 }
@@ -76,7 +76,7 @@ function aggregateFeatureScores(allRankings: UserRankingFeature[]): {
  */
 function calculateDampenedVector(
   total_score_vector: number[],
-  feature_count_vector: number[]
+  feature_count_vector: number[],
 ): number[] {
   const new_profile_vector = new Array(VECTOR_DIMENSION).fill(0);
   for (let i = 0; i < VECTOR_DIMENSION; i++) {
@@ -97,7 +97,7 @@ function calculateDampenedVector(
  */
 export async function recalculateProfileVector(userId: number) {
   console.log(
-    `[VectorService] Starting vector recalculation for userId: ${userId}`
+    `[VectorService] Starting vector recalculation for userId: ${userId}`,
   );
 
   const client = await pool.connect();
@@ -112,7 +112,7 @@ export async function recalculateProfileVector(userId: number) {
     // 3. Calculate the final, dampened profile vector.
     const new_profile_vector = calculateDampenedVector(
       total_score_vector,
-      feature_count_vector
+      feature_count_vector,
     );
 
     // 4. Persist the new vector to the database.
@@ -120,24 +120,24 @@ export async function recalculateProfileVector(userId: number) {
     const updateResult = await client.query(
       `--sql
       UPDATE users SET profile_vector = $1 WHERE id = $2`,
-      [vectorString, userId]
+      [vectorString, userId],
     );
 
     // Add error handling for cases where the user ID might not exist.
     if (updateResult.rowCount === 0) {
       throw new ApiError(
         `User with ID ${userId} not found for vector update.`,
-        404
+        404,
       );
     }
 
     console.log(
-      `[VectorService] Recalculation completed for userId: ${userId}`
+      `[VectorService] Recalculation completed for userId: ${userId}`,
     );
   } catch (error) {
     console.error(
       `🔴 [VectorService] Failed to recalculate vector for userId: ${userId}`,
-      error
+      error,
     );
     // Re-throw the error to be handled by the calling service if necessary.
     throw error;
