@@ -89,6 +89,7 @@ export async function getTierlistById(tierlistId: number, userId: number) {
  * Save or update user's ranking for a tierlist.
  */
 export async function saveUserRanking(
+  client: PoolClient, // Add client as the first argument
   userId: number,
   templateId: number,
   rankedItems: RankedItemInput[]
@@ -107,10 +108,8 @@ export async function saveUserRanking(
       );
     }
   }
-  const client = await pool.connect();
+  // Remove pool.connect() and transaction management (BEGIN, COMMIT, ROLLBACK, client.release())
   try {
-    await client.query("BEGIN");
-
     const templateCheck = await client.query(
       `--sql
       SELECT id FROM tierlist_templates WHERE id = $1`,
@@ -124,7 +123,7 @@ export async function saveUserRanking(
       const movieIds = rankedItems.map((item) => item.movieId);
       const validationQuery = `--sql
         SELECT (
-            SELECT COUNT(movie_id)::int FROM template_movies 
+            SELECT COUNT(movie_id)::int FROM template_movies
             WHERE template_id = $1 AND movie_id = ANY($2::int[])
         ) = array_length($2::int[], 1) AS "all_ids_valid"
       `;
@@ -170,16 +169,12 @@ export async function saveUserRanking(
       const tiers = rankedItems.map((item) => item.tier);
       await client.query(insertQuery, [ranking.id, movieIds, tiers]);
     }
+    // No COMMIT here, as it's managed by the caller
 
-    await client.query("COMMIT");
-
-    await recalculateProfileVector(userId);
+    await recalculateProfileVector(client, userId);
     return { message: "Ranking saved successfully." };
   } catch (e) {
-    // @ts-ignore
-    if (client && client._queryable) await client.query("ROLLBACK");
+    // No ROLLBACK or client.release() here, as it's managed by the caller
     throw e;
-  } finally {
-    client.release();
   }
 }

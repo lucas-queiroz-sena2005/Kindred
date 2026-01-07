@@ -57,6 +57,7 @@ async function seedTemplates(client: PoolClient) {
     );
     const templateId = res.rows[0].id;
     templateIds[template.title] = templateId;
+    console.log(`  Mapped template: "${template.title}" to ID: ${templateId}`);
 
     if (template.movieIds.length > 0) {
       const templateMovieValues = template.movieIds.map((movieId) => [
@@ -79,31 +80,65 @@ async function seedTemplates(client: PoolClient) {
   return templateIds;
 }
 
+async function seedTmdbConfig(client: PoolClient) {
+  console.log("--- Seeding TMDB config ---");
+  const base_url = "http://image.tmdb.org/t/p/";
+  const secure_base_url = "https://image.tmdb.org/t/p/";
+  const poster_sizes = ["w92", "w154", "w185", "w342", "w500", "w780", "original"];
+
+  await client.query(
+    `INSERT INTO tmdb_config (id, base_url, secure_base_url, poster_sizes, updated_at)
+     VALUES (1, $1, $2, $3, NOW())
+     ON CONFLICT (id) DO UPDATE SET
+     base_url = EXCLUDED.base_url,
+     secure_base_url = EXCLUDED.secure_base_url,
+     poster_sizes = EXCLUDED.poster_sizes,
+     updated_at = NOW()`,
+    [base_url, secure_base_url, poster_sizes],
+  );
+  console.log("Seeded TMDB config.");
+}
+
+import bcrypt from "bcryptjs"; // Need to import bcrypt for hashing
+
 async function seedUsersAndGetIds(client: PoolClient): Promise<{ [key: string]: number }> {
     console.log("--- Seeding users ---");
     const userIds: { [key: string]: number } = {};
-    for (const user of users) {
-        try {
-            const registeredUser = await authService.register({ ...user, password: "password123" });
-            userIds[user.username] = registeredUser.id;
-            console.log(`Seeded ${user.username} (pw: password123)`);
-        } catch (error) {
-            // If user already exists, try to get the id
-            const res = await client.query('SELECT id FROM users WHERE username = $1', [user.username]);
-            if (res.rows.length > 0) {
-                userIds[user.username] = res.rows[0].id;
-                console.log(`Found existing user ${user.username}`);
-            } else {
-                console.error(`Could not seed or find user ${user.username}`);
-            }
-        }
-    }
-    console.log(`Seeded or found ${Object.keys(userIds).length} users.`);
+
+    const userValues = await Promise.all(
+        users.map(async (user) => {
+            const hashedPassword = await bcrypt.hash("password123", 10); // Hash the default password
+            // Generate a random 256-dimension vector for the profile
+            const profileVector = Array.from({ length: 256 }, () => Math.random());
+            return [user.username, user.email, hashedPassword, `[${profileVector.join(",")}]`, user.id];
+        })
+    );
+
+    const placeholders = buildBulkInsertPlaceholders(userValues.length, 5);
+    const query = `--sql
+        INSERT INTO users (username, email, password_hash, profile_vector, id)
+        VALUES ${placeholders}
+        ON CONFLICT (id) DO UPDATE SET
+            username = EXCLUDED.username,
+            email = EXCLUDED.email,
+            password_hash = EXCLUDED.password_hash,
+            profile_vector = EXCLUDED.profile_vector
+        RETURNING id, username
+    `;
+
+    const res = await client.query(query, userValues.flat());
+
+    res.rows.forEach(row => {
+        userIds[row.username] = row.id;
+        console.log(`Upserted user: ${row.username} (id: ${row.id})`);
+    });
+
+    console.log(`Upserted ${Object.keys(userIds).length} users.`);
     return userIds;
 }
 
 
-async function seedRankings(userIds: { [key: string]: number }, templateIds: { [key: string]: number }) {
+async function seedRankings(client: PoolClient, userIds: { [key: string]: number }, templateIds: { [key: string]: number }) {
   console.log("--- Seeding rankings ---");
   
   // Correction for Leo Morales' ranking of T2
@@ -124,8 +159,8 @@ async function seedRankings(userIds: { [key: string]: number }, templateIds: { [
         const userId = userIds[user.username];
         const templateId = templateIds[template.title];
         if(userId && templateId) {
-            console.log(`--- Seeding ranking for user ${user.username} on template ${template.title} ---`);
-            await tierlistService.saveUserRanking(userId, templateId, ranking.rankedItems);
+            console.log(`--- Seeding ranking for user ${user.username} on template ${template.title} (ID: ${templateId}) ---`);
+            await tierlistService.saveUserRanking(client, userId, templateId, ranking.rankedItems);
         }
     }
   }
@@ -139,8 +174,15 @@ export async function seedNewData() {
     await seedDirectors(client);
     await seedMovies(client);
     const templateIds = await seedTemplates(client);
+    console.log("Finished seeding templates.");
+
+    // Verify templates in database
+    const dbTemplates = await client.query(`SELECT id, title FROM tierlist_templates ORDER BY id ASC;`);
+    console.log("Templates currently in DB:", dbTemplates.rows);
+
+    await seedTmdbConfig(client); // Call the new function here
     const userIds = await seedUsersAndGetIds(client);
-    await seedRankings(userIds, templateIds);
+    await seedRankings(client, userIds, templateIds);
     await client.query("COMMIT");
     console.log("\n✅ New database seeding complete!");
   } catch (err) {
@@ -151,3 +193,4 @@ export async function seedNewData() {
     client.release();
   }
 }
+
