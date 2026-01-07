@@ -1,6 +1,6 @@
 import pool from "../db/db.js";
 import { ApiError } from "../errors/customErrors.js";
-import { recalculateProfileVector } from './vectorService.js';
+import { recalculateProfileVector } from "./vectorService.js";
 
 interface RankedItemInput {
   movieId: number;
@@ -15,7 +15,7 @@ export async function getAllTemplates(
   sortBy: "title" | "createdAt",
   filter: "all" | "ranked" | "unranked",
   limit: number,
-  offset: number
+  offset: number,
 ) {
   const sortColumn = sortBy === "createdAt" ? "ur.updated_at" : "tt.title";
   const sortDirection = sortBy === "createdAt" ? "DESC" : "ASC";
@@ -24,8 +24,8 @@ export async function getAllTemplates(
     filter === "ranked"
       ? "WHERE ur.id IS NOT NULL"
       : filter === "unranked"
-      ? "WHERE ur.id IS NULL"
-      : "";
+        ? "WHERE ur.id IS NULL"
+        : "";
 
   const query = `--sql
     SELECT
@@ -52,7 +52,7 @@ export async function getAllTemplates(
 export async function getTierlistById(tierlistId: number, userId: number) {
   const templateRes = await pool.query(
     `SELECT id, title, description FROM tierlist_templates WHERE id = $1`,
-    [tierlistId]
+    [tierlistId],
   );
   if (!templateRes.rows.length)
     throw new ApiError("Tierlist template not found.", 404);
@@ -75,7 +75,7 @@ export async function getTierlistById(tierlistId: number, userId: number) {
       ON ri.ranking_id = ur.id AND ri.movie_id = m.id
     WHERE tm.template_id = $1
   `,
-    [tierlistId, userId]
+    [tierlistId, userId],
   );
 
   return {
@@ -89,10 +89,9 @@ export async function getTierlistById(tierlistId: number, userId: number) {
  * Save or update user's ranking for a tierlist.
  */
 export async function saveUserRanking(
-  client: PoolClient, // Add client as the first argument
   userId: number,
   templateId: number,
-  rankedItems: RankedItemInput[]
+  rankedItems: RankedItemInput[],
 ) {
   // --- Input Validation ---
   for (const item of rankedItems) {
@@ -104,16 +103,18 @@ export async function saveUserRanking(
     ) {
       throw new ApiError(
         "Invalid 'rankedItems' payload. Each item must have a numeric 'movieId' and a 'tier' between 0 and 5.",
-        400
+        400,
       );
     }
   }
-  // Remove pool.connect() and transaction management (BEGIN, COMMIT, ROLLBACK, client.release())
+  const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+
     const templateCheck = await client.query(
       `--sql
       SELECT id FROM tierlist_templates WHERE id = $1`,
-      [templateId]
+      [templateId],
     );
     if (templateCheck.rows.length === 0) {
       throw new ApiError("Tierlist template not found.", 404);
@@ -123,7 +124,7 @@ export async function saveUserRanking(
       const movieIds = rankedItems.map((item) => item.movieId);
       const validationQuery = `--sql
         SELECT (
-            SELECT COUNT(movie_id)::int FROM template_movies
+            SELECT COUNT(movie_id)::int FROM template_movies 
             WHERE template_id = $1 AND movie_id = ANY($2::int[])
         ) = array_length($2::int[], 1) AS "all_ids_valid"
       `;
@@ -135,7 +136,7 @@ export async function saveUserRanking(
       if (!rows[0].all_ids_valid) {
         throw new ApiError(
           "One or more movies are invalid or do not belong to this tierlist.",
-          400
+          400,
         );
       }
     }
@@ -150,13 +151,13 @@ export async function saveUserRanking(
       DO UPDATE SET updated_at = NOW()
       RETURNING id
     `,
-      [userId, templateId]
+      [userId, templateId],
     );
 
     await client.query(
       `--sql
       DELETE FROM ranked_items WHERE ranking_id = $1`,
-      [ranking.id]
+      [ranking.id],
     );
 
     if (rankedItems.length) {
@@ -169,12 +170,16 @@ export async function saveUserRanking(
       const tiers = rankedItems.map((item) => item.tier);
       await client.query(insertQuery, [ranking.id, movieIds, tiers]);
     }
-    // No COMMIT here, as it's managed by the caller
 
-    await recalculateProfileVector(client, userId);
+    await client.query("COMMIT");
+
+    await recalculateProfileVector(userId);
     return { message: "Ranking saved successfully." };
   } catch (e) {
-    // No ROLLBACK or client.release() here, as it's managed by the caller
+    // @ts-ignore
+    if (client && client._queryable) await client.query("ROLLBACK");
     throw e;
+  } finally {
+    client.release();
   }
 }

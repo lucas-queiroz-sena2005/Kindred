@@ -96,7 +96,7 @@ CREATE INDEX idx_directors_name ON directors(name);
 
 CREATE TABLE movies (
     id INTEGER PRIMARY KEY,
-    mdb_id INTEGER UNIQUE,
+    tmdb_id INTEGER UNIQUE,
     title VARCHAR(255) NOT NULL,
     release_year INTEGER,
     director_id INTEGER REFERENCES directors(id),

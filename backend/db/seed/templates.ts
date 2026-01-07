@@ -17,6 +17,7 @@ export async function createTemplateAndLinkMovies(
       `Rank all films directed by ${directorName}.`,
     ],
   );
+  console.log(res.rows);
   const templateId = res.rows[0].id;
 
   if (movieIds.length > 0) {

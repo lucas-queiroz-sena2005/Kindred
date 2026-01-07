@@ -95,11 +95,12 @@ function calculateDampenedVector(
  * Recalculates and updates a user's profile vector based on all their movie rankings.
  * This is an idempotent operation that rebuilds the vector from scratch.
  */
-export async function recalculateProfileVector(client: PoolClient, userId: number) {
+export async function recalculateProfileVector(userId: number) {
   console.log(
     `[VectorService] Starting vector recalculation for userId: ${userId}`,
   );
 
+  const client = await pool.connect();
   try {
     // 1. Fetch all user rankings and their associated features.
     const allRankings = await getAllUserRankings(client, userId);
@@ -140,6 +141,7 @@ export async function recalculateProfileVector(client: PoolClient, userId: numbe
     );
     // Re-throw the error to be handled by the calling service if necessary.
     throw error;
+  } finally {
+    client.release();
   }
 }
-
