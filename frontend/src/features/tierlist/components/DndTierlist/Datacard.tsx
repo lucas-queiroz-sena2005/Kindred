@@ -2,6 +2,7 @@ import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Movie } from "../../../../types/tierlist";
 import { useTmdbConfig } from "../../../../context/TmdbConfigProvider";
+import ImagePlaceholder from '../../../../assets/image_placeholder.png'; // Import the placeholder image
 
 interface DataCardProps {
   item: Movie;
@@ -16,6 +17,10 @@ export default function DataCard({
 }: DataCardProps): React.ReactElement {
   const { getImageUrl } = useTmdbConfig();
   const imageUrl = getImageUrl(item.poster_path || "");
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = ImagePlaceholder; // Set the placeholder image on error
+  };
 
   return (
     <Draggable draggableId={String(item.id)} index={index}>
@@ -44,7 +49,7 @@ export default function DataCard({
             {...customDragHandleProps}
             className="cursor-pointer"
           >
-            <img className="w-16" src={imageUrl} alt={item.title} />
+            <img className="w-16" src={imageUrl} alt={item.title} onError={handleImageError} />
           </div>
         );
       }}

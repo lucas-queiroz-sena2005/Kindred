@@ -17,7 +17,7 @@ export default function SimpleTierRow({ tier, onSelectMovie }: SimpleTierRowProp
 
   return (
     <div className="flex items-stretch min-h-[100px] mb-1 border border-gray-700 rounded">
-      <div className={`flex items-center justify-center w-24 text-white font-bold text-xl ${tierColorClass}`}>
+      <div className={`flex items-center justify-center w-28 text-white font-bold text-xl ${tierColorClass}`}>
         {tier.title}
       </div>
       <div className="flex-1 bg-gray-700 p-2 flex items-center gap-2 overflow-x-auto min-h-[100px]">

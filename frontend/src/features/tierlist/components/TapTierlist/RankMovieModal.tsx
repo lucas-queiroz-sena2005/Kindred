@@ -19,7 +19,7 @@ export default function RankMovieModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-end"
+      className="fixed inset-0 flex justify-center items-end z-20"
       onClick={onClose} // Close modal on overlay click
     >
       <div

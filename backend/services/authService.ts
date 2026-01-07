@@ -50,6 +50,16 @@ export async function register(userData: UserData): Promise<RegisteredUser> {
 
   const newUserId = newUserResult.rows[0].id;
 
+  // Initialize profile vector
+  const zeroVector = new Array(256).fill(0);
+  const vectorString = `[${zeroVector.join(",")}]`;
+
+  await pool.query(
+    `--sql
+    UPDATE users SET profile_vector = $1 WHERE id = $2`,
+    [vectorString, newUserId],
+  );
+
   return { id: newUserId, username: trimmedData.username };
 }
 

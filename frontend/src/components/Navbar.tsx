@@ -8,7 +8,7 @@ function Navbar(): React.ReactElement {
   const activeClassName = "text-purple-600 dark:text-purple-400 font-semibold";
 
   return (
-    <nav className="bg-white border-b border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800">
+    <nav className="bg-white border-b border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 fixed top-16 w-full z-20 h-14">
       <ul className="flex justify-center items-center gap-6 px-6 py-4 text-neutral-700 dark:text-neutral-200">
         {!isAuthenticated ? (
           <>
@@ -94,4 +94,3 @@ function Navbar(): React.ReactElement {
 }
 
 export default Navbar;
-

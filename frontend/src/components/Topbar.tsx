@@ -39,7 +39,7 @@ function Topbar(): React.ReactElement {
   }, [dropdownRef]);
 
   return (
-    <header className="bg-neutral-100 border-b border-neutral-200 dark:bg-neutral-950 dark:border-neutral-800">
+    <header className="bg-neutral-100 border-b border-neutral-200 dark:bg-neutral-950 dark:border-neutral-800 fixed top-0 w-full z-20 h-16">
       <div className="mx-auto flex items-center gap-4 p-4">
         <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
           Kindred

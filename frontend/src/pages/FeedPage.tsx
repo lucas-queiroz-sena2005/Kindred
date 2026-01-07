@@ -7,7 +7,7 @@ import { TemplateCardSkeleton } from "../components/TemplateCardSkeleton";
 import ErrorMessage from "../components/ErrorMessage";
 
 function FeedPage(): React.ReactElement {
-  const PAGE_LIMIT = 10;
+  const PAGE_LIMIT = 9;
   const {
     data,
     fetchNextPage,
@@ -25,7 +25,7 @@ function FeedPage(): React.ReactElement {
         filter: "all",
         limit: PAGE_LIMIT,
         offset: pageParam,
-      }),      
+      }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       const totalFetched = allPages.flat().length;
@@ -48,7 +48,10 @@ function FeedPage(): React.ReactElement {
       {isError && <ErrorMessage message={error.message} />}
 
       {showEmptyState && (
-        <ErrorMessage message="There are no templates available right now." variant="info" />
+        <ErrorMessage
+          message="There are no templates available right now."
+          variant="info"
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -58,10 +61,18 @@ function FeedPage(): React.ReactElement {
           ))}
 
         {(isLoading || isFetchingNextPage) &&
-          [...Array(isLoading ? 6 : 3)].map((_, i) => <TemplateCardSkeleton key={i} />)}
+          [...Array(isLoading ? 6 : 3)].map((_, i) => (
+            <TemplateCardSkeleton key={i} />
+          ))}
       </div>
 
-      {showNoMoreResults && <ErrorMessage message="No more tierlists to show." variant="info" className="mt-4 mb-0" />}
+      {showNoMoreResults && (
+        <ErrorMessage
+          message="No more tierlists to show."
+          variant="info"
+          className="mt-4 mb-0"
+        />
+      )}
     </>
   );
 }

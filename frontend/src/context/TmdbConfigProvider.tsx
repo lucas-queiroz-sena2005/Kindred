@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { api } from '../api';
 import type { TmdbConfig } from '../api';
+import ImagePlaceholder from '../assets/image_placeholder.png'; // Import the placeholder image
 
 interface TmdbConfigContextType {
   config: TmdbConfig | null;
@@ -35,7 +36,7 @@ export const TmdbConfigProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const getImageUrl = (path: string, size: string = 'w500'): string => {
-    if (!config || !path) return ''; // return a placeholder or empty string
+    if (!config || !path) return ImagePlaceholder; // Use the placeholder if no config or path
     
     // Choose a poster size. 'w500' is a good default.
     // You could also implement logic to select the best size.
