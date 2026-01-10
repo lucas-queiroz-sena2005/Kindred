@@ -1,343 +1,427 @@
+# Kindred
+
+Full-stack web application that matches users based on cinematic preferences using vector similarity search. Users rank films in tier lists; the system extracts feature vectors from these rankings and computes taste compatibility via cosine similarity on PostgreSQL with the `pgvector` extension.
+
+## System Overview
+
+Kindred operates on a simple premise: users complete tier lists (S through F rankings) for curated movie collections. Each ranking generates a 256-dimensional profile vector encoding preferences across genres, decades, and directors. The system then finds other users with similar vectors using approximate nearest neighbor search.
+
+The term "Kin" refers to users with high cosine similarity scores—people whose cinematic preferences align closely with yours, even if they haven't ranked the same films.
+
 <div align="center">
-  <h1>Kindred</h1>
-  <p>
-    <strong><a href="#-english">English</a></strong> | <strong><a href="#-português">Português</a></strong>
-  </p>
+  <img src="./demo.gif" alt="Kindred App Demo" width="100%">
+  <p><i>A short overview of the core interface and functionality.</i></p>
 </div>
 
----
+## Architecture
 
-<a id="-english"></a>
-## 🇬🇧 English
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                              Frontend                               │
+│  React 19 + TypeScript + TanStack Query + Tailwind CSS + Vite       │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────────┐  │
+│  │ TierList    │ │ Kin Page    │ │ Messages    │ │ Notifications │  │
+│  │ (DnD/Tap)   │ │ (Filters)   │ │ (CRUD)      │ │ (Polling)     │  │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └───────────────┘  │
+└────────────────────────────┬────────────────────────────────────────┘
+                             │ HTTP (REST API)
+┌────────────────────────────┴────────────────────────────────────────┐
+│                              Backend                                │
+│  Express 5 + TypeScript + node-pg                                   │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────────┐  │
+│  │ Auth        │ │ Tierlist    │ │ Kin         │ │ Vector        │  │
+│  │ Service     │ │ Service     │ │ Service     │ │ Service       │  │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └───────────────┘  │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────────────┐│
+│  │ Message     │ │ Connection  │ │ TMDB Sync Job (node-cron)      ││
+│  │ Service     │ │ Service     │ │ Daily at 00:00 UTC             ││
+│  └─────────────┘ └─────────────┘ └─────────────────────────────────┘│
+└────────────────────────────┬────────────────────────────────────────┘
+                             │ PostgreSQL Protocol
+┌────────────────────────────┴────────────────────────────────────────┐
+│                              Database                               │
+│  PostgreSQL 16 + pgvector                                           │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────────┐  │
+│  │ users       │ │ movies      │ │ user_       │ │ tierlist_     │  │
+│  │ (vector256) │ │ (tmdb_id)   │ │ rankings    │ │ templates     │  │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └───────────────┘  │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────────┐  │
+│  │ messages    │ │ user_       │ │ connection_ │ │ notifications │  │
+│  │             │ │ connections │ │ requests    │ │               │  │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └───────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-A full-stack web application that quantifies user "taste" and discovers compatible users through a feature-based vector similarity algorithm.
+### Deployment Architecture (Docker Compose)
 
------
+```yaml
+services:
+  db: pgvector/pgvector:pg16 # Port 5432
+  backend: Node.js 20 # Port 5000
+  frontend: Nginx (static + reverse proxy) # Port 80
+```
 
-## Live Demo & Screenshots
+Frontend serves static files and proxies `/api` requests to the backend container.
 
-*   **Live Application:** [Link to your deployed Render/Vercel site]
+## Core Algorithm: Profile Vector Calculation
 
-## Features
+### Feature Map Structure (256 dimensions)
 
-*   **Dual-Mode Ranking Interface:** Experience a seamless ranking process with a fluid **drag-and-drop** interface on desktop and an intuitive **tap-to-rank** system on mobile. The responsive design ensures a great experience on any device.
-*   **Secure & Modern Authentication:** Your account is protected with a robust authentication system using JWTs, which are securely stored in `httpOnly` cookies to prevent common web vulnerabilities.
-*   **Persistent & Sharable Tier Lists:** Never lose your work. All rankings are automatically saved to your profile and can be revisited and updated anytime.
-*   **Discover Your "Kin":** Go beyond simple rankings and find users who truly share your cinematic tastes. The "Kin" page presents a sorted list of users based on a deep "taste DNA" similarity score.
-*   **The "Taste DNA" Algorithm:** The project's core innovation. Instead of just comparing movie-for-movie, it analyzes your preferences across genres, directors, and decades to build a unique vector profile of your taste, enabling more meaningful user matching.
+| Index Range | Feature Type | Count |
+| ----------- | ------------ | ----- |
+| 0–18        | Genres       | 19    |
+| 19–29       | Decades      | 11    |
+| 30–255      | Directors    | 226   |
 
-## Core Concept: The "Taste DNA" Algorithm
+### Write Path (Vector Generation)
 
-Instead of just matching you with people who like the same movies, Kindred tries to understand the *essence* of your taste—the genres, directors, and eras you gravitate towards. It then finds other users who share that same underlying "Taste DNA," even if you haven't ranked the same set of films.
+When a user saves a tier list ranking:
 
-This is achieved through a two-part system:
+1. **Fetch all ranked items** for the user across all tier lists
+2. **Map tiers to weights**: S=+3, A=+2, B=+1, C=0, D=-1, F=-2
+3. **Aggregate by feature**: Sum weights for each genre/decade/director
+4. **Apply Bayesian dampening** to prevent low-count bias:
 
-### 1\. The Write Path (Calculating the Vector)
+```
+affinity[i] = total_score[i] / (k + count[i])
+```
 
-When a user saves a tier list, a "fire-and-forget" `recalculateProfileVector` function is triggered on the backend.
+Where `k=3` (dampening factor). This shrinks scores toward zero when sample size is small.
 
-1.  **Data Collection:** The service fetches *all* items the user has *ever* ranked.
-2.  **Mapping:** Each item's tier (S-F) is mapped to a score (e.g., `S: +3`, `A: +2`, `F: -2`).
-3.  **Aggregation:** The system aggregates these scores against every *feature* associated with the items (e.g., `Action`, `1990s`, `Christopher Nolan`).
-4.  **Shrinkage (Bayesian Average):** To prevent low-count biases (e.g., ranking one "Action" movie as "S"), the final affinity score for each feature is calculated using a "dampening" formula:
-    `affinity = totalScore / (k + count)`
-      * `totalScore`: The sum of scores for a feature (e.g., `+25` for "Action").
-      * `count`: The number of "Action" items ranked.
-      * `k`: A fixed dampening factor (e.g., `3`).
-5.  **Storage:** The final `vector(256)` is saved to the `users` table.
+5. **Persist** the 256-dimension vector to `users.profile_vector`
 
-### 2\. The Read Path (Finding Similar Users)
+### Read Path (Similarity Search)
 
-When a user visits the "Kin" page, the backend executes a fast, indexed search.
+The Kin page retrieves compatible users via:
 
-1.  **Metric:** Similarity is defined by `Cosine Similarity`, which measures the *angle* between two profile vectors, ignoring magnitude.
-2.  **Database:** PostgreSQL with the `pg_vector` extension.
-3.  **Query:** We use the `<=>` (Cosine Distance) operator.
-4.  **Performance:** The search is nearly instantaneous (even with millions of users) by using an `ivfflat` (Inverted File Flat) index on the `profile_vector` column.
+```sql
+SELECT
+  other.id,
+  other.username,
+  GREATEST(0, (1 - (other.profile_vector <=> current_user.profile_vector))) AS similarity_score
+FROM users other
+WHERE other.id != $current_user_id
+  AND other.profile_vector IS NOT NULL
+ORDER BY similarity_score DESC
+LIMIT $limit OFFSET $offset
+```
 
------
-## Tech Stack
+The `<=>` operator computes cosine distance. Subtracting from 1 converts to similarity (0–1 range).
 
-  * **Monorepo:** Managed with npm workspaces.
-  * **Frontend:**
-      * React 19 (Vite + SWC)
-      * TypeScript
-      * Tailwind CSS (styling)
-      * TanStack Query (`@tanstack/react-query`) for server state management.
-      * `@hello-pangea/dnd` for the drag-and-drop interface.
-  * **Backend:**
-      * Node.js
-      * Express (routing and middleware)
-      * TypeScript
-      * `jsonwebtoken` (JWTs for auth)
-      * `bcryptjs` (password hashing)
-  * **Database:**
-      * PostgreSQL
-      * `pg_vector` (vector storage and similarity search)
-      * `node-postgres` (`pg`) as the database driver.
+### Segment-Based Comparison
 
-## Getting Started (Local Development)
+Users can filter by feature category:
+
+```sql
+-- Genre similarity only (indices 0-18)
+((other.profile_vector::real[])[0:18])::vector
+  <=>
+((current.profile_vector::real[])[0:18])::vector
+```
+
+## Technology Stack
+
+### Backend
+
+| Component        | Technology              | Purpose                          |
+| ---------------- | ----------------------- | -------------------------------- |
+| Runtime          | Node.js 20              | JavaScript execution             |
+| Framework        | Express 5               | HTTP routing, middleware         |
+| Language         | TypeScript              | Type safety                      |
+| Database Driver  | node-postgres (pg)      | PostgreSQL connection pool       |
+| Auth             | jsonwebtoken + bcryptjs | JWT generation, password hashing |
+| Scheduling       | node-cron               | TMDB sync job                    |
+| Validation       | validator.js            | Input sanitization               |
+| Profanity Filter | bad-words               | Content moderation               |
+
+### Frontend
+
+| Component    | Technology        | Purpose                        |
+| ------------ | ----------------- | ------------------------------ |
+| Framework    | React 19          | UI components                  |
+| Build Tool   | Vite 7 + SWC      | Fast HMR, production builds    |
+| Language     | TypeScript        | Type safety                    |
+| Styling      | Tailwind CSS 4    | Utility-first CSS              |
+| Server State | TanStack Query 5  | Caching, pagination, mutations |
+| Routing      | React Router 7    | Client-side navigation         |
+| Drag & Drop  | @hello-pangea/dnd | Tier list reordering           |
+
+### Database
+
+| Component | Technology    | Purpose                              |
+| --------- | ------------- | ------------------------------------ |
+| RDBMS     | PostgreSQL 16 | Relational data storage              |
+| Extension | pgvector      | Vector storage, similarity operators |
+
+### External Services
+
+| Service  | Purpose                                             |
+| -------- | --------------------------------------------------- |
+| TMDB API | Movie metadata (titles, posters, genres, directors) |
+
+## Key Features
+
+### Dual-Mode Tier List Interface
+
+The tier list component detects viewport width via `useMediaQuery`:
+
+- **Desktop (≥768px)**: Drag-and-drop interface using `@hello-pangea/dnd`
+- **Mobile (<768px)**: Tap-to-rank modal interface
+
+Users can override this with manual mode selection.
+
+### Authentication
+
+- JWT tokens stored in `httpOnly` cookies (prevents XSS token theft)
+- Token expiry configurable via `JWT_EXPIRY` env var (default: 1h)
+- Cookie max age: 72 hours
+- Password hashing: bcrypt with 10 salt rounds
+
+### Connection System
+
+Users can:
+
+1. Send connection requests (creates `connection_request` row)
+2. Accept incoming requests (deletes request, creates `user_connections` row)
+3. Block users (cascades: removes connections, requests; creates `user_blocks` row)
+
+Connection state machine:
+
+```
+not_connected → pending_from_user (sent request)
+              → pending_from_target (received request)
+              → connected (mutual)
+              → blocked (one-way or mutual)
+```
+
+### Notification System
+
+Event-driven notifications for:
+
+- `kin_request`: Someone sent a connection request
+- `kin_accepted`: Your request was accepted
+- `new_message`: New message received
+
+Notifications are polled client-side. Read status is updated atomically when fetched.
+
+### TMDB Integration
+
+**Initial Sync** (seed script):
+
+- Fetches movies by director ID from TMDB
+- Extracts genres, release years, poster paths
+- Builds `vw_movie_features` view for efficient vector calculation
+
+**Daily Sync** (cron job at 00:00 UTC):
+
+1. Calls `/movie/changes` endpoint to get IDs modified in last 24h
+2. Filters to only locally-stored movies
+3. Updates `title`, `poster_path`, `last_sync` for changed records
+4. Refreshes image CDN configuration
+
+## Data Model
+
+### Core Tables
+
+```
+users
+├── id (serial)
+├── username (unique)
+├── email (unique)
+├── password_hash
+├── profile_vector (vector(256))
+└── created_at
+
+movies
+├── id (serial)
+├── tmdb_id (unique)
+├── title
+├── poster_path
+├── release_year
+├── decade (computed)
+└── last_sync
+
+tierlist_templates
+├── id (serial)
+├── title
+└── description
+
+template_movies (junction)
+├── template_id (fk)
+└── movie_id (fk)
+
+user_rankings
+├── id (serial)
+├── user_id (fk)
+├── template_id (fk)
+├── updated_at
+└── UNIQUE(user_id, template_id)
+
+ranked_items
+├── id (serial)
+├── ranking_id (fk)
+├── movie_id (fk)
+└── tier (0-5, maps to S-F)
+```
+
+### Social Tables
+
+```
+user_connections
+├── user_id_a (fk, smaller id)
+├── user_id_b (fk, larger id)
+└── created_at
+
+connection_request
+├── sender_id (fk)
+├── receiver_id (fk)
+└── created_at
+
+user_blocks
+├── blocker_id (fk)
+├── blocked_id (fk)
+└── created_at
+
+messages
+├── id (serial)
+├── sender_id (fk)
+├── receiver_id (fk)
+├── content
+├── is_read (boolean)
+└── created_at
+
+notifications
+├── id (serial)
+├── user_id (fk)
+├── type (enum)
+├── actor_id (fk)
+├── is_read (boolean)
+└── created_at
+```
+
+## API Endpoints
+
+### Public
+
+| Method | Path                 | Description              |
+| ------ | -------------------- | ------------------------ |
+| POST   | `/api/auth/register` | Create account           |
+| POST   | `/api/auth/login`    | Authenticate, set cookie |
+| POST   | `/api/auth/logout`   | Clear cookie             |
+| GET    | `/api/config/tmdb`   | TMDB image configuration |
+
+### Protected (requires auth cookie)
+
+| Method | Path                                | Description                           |
+| ------ | ----------------------------------- | ------------------------------------- |
+| GET    | `/api/user/me`                      | Current user info                     |
+| GET    | `/api/tierlist/list`                | List templates with ranking status    |
+| GET    | `/api/tierlist/:id`                 | Template details with user's rankings |
+| POST   | `/api/tierlist/:id`                 | Save tier list ranking                |
+| GET    | `/api/kin/list`                     | Paginated similar users               |
+| GET    | `/api/kin/compare`                  | Detailed comparison with target user  |
+| GET    | `/api/kin/categories`               | Available filter categories           |
+| GET    | `/api/messages/:targetId`           | Conversation history                  |
+| POST   | `/api/messages/:targetId`           | Send message                          |
+| GET    | `/api/messages/conversations`       | List all conversations                |
+| GET    | `/api/connection/:targetId/status`  | Connection state                      |
+| POST   | `/api/connection/:targetId/ask`     | Send/accept request                   |
+| DELETE | `/api/connection/:targetId/reject`  | Reject request                        |
+| DELETE | `/api/connection/:targetId/cancel`  | Remove connection                     |
+| POST   | `/api/connection/:targetId/block`   | Block user                            |
+| DELETE | `/api/connection/:targetId/unblock` | Unblock user                          |
+| GET    | `/api/notifications`                | Get and mark as read                  |
+| GET    | `/api/notifications/quantity`       | Unread count                          |
+
+## Local Development
 
 ### Prerequisites
 
-  * Node.js (v18+)
-  * npm (v9+) or a compatible package manager.
-  * A running PostgreSQL (v16+) instance.
-  * A TMDB API Key (for the database seed script).
+- Node.js 20+
+- PostgreSQL 16+ with pgvector extension
+- TMDB API key (for seeding)
 
-### 1\. Initial Setup
+### Setup
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/lucas-queiroz-sena2005/kindred.git
+# Clone and install
+git clone <repo-url>
 cd kindred
 
-# 2. Install all dependencies from the root directory
+# Backend setup
+cd backend
+cp .env.example .env  # Configure DATABASE_URL, JWT_SECRET, TMDB_API_KEY
 npm install
+npm run db:seed       # Populate database with TMDB data
+npm run dev           # Starts on :3001
+
+# Frontend setup (separate terminal)
+cd frontend
+npm install
+npm run dev           # Starts on :5173
 ```
 
-### 2\. Backend Setup
+### Environment Variables
 
-1.  **Navigate to the backend:**
-    ```bash
-    cd backend
-    ```
-2.  **Set up PostgreSQL:**
-      * Create a user and a database.
-      * **Important:** You must install/enable the `vector` extension. If running Postgres locally (not in Docker), you may need to run `sudo apt install postgresql-16-pgvector`.
-3.  **Create `.env` file:**
-      * Create a `.env` file in the `backend/` directory.
-      * Copy the contents of `.env.example` (if one exists) or use the structure below.
-4.  **Run Database Schema:**
-      * Use a psql client to run the `database.sql` file against your new database. This will create all tables, views, and indexes.
-    ```bash
-    psql "YOUR_DATABASE_URL" < database.sql
-    ```
-5.  **Seed the Database (Optional but Recommended):**
-      * This script fetches data from TMDB and populates the `movies`, `directors`, and `genres` tables.
-    ```bash
-    npm run seed
-    ```
-6.  **Run the Backend Server:**
-    ```bash
-    npm run dev
-    ```
-    The server will be running at `http://localhost:3001`.
+**Backend** (`/backend/.env`):
 
-### 3\. Frontend Setup
-
-1.  **Navigate to the frontend:**
-    ```bash
-    cd frontend
-    ```
-2.  **Run the Frontend App:**
-    ```bash
-    npm run dev
-    ```
-    The app will be running at `http://localhost:5173`.
-
-## Environment Variables
-
-The backend requires a `.env` file in `/backend`.
-
-```.env
-# Example .env file
-
-# URL for the PostgreSQL database.
-DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/YOUR_DB_NAME"
-
-# A strong, random string for signing JWTs.
-JWT_SECRET="YOUR_SUPER_SECRET_KEY"
-
-# API key from The Movie Database (TMDB) for the seed script.
-TMDB_API_KEY="YOUR_TMDB_KEY"
+```
+DATABASE_URL=postgresql://user:pass@localhost:5432/kindred
+JWT_SECRET=<random-string>
+JWT_EXPIRY=1h
+TMDB_API_KEY=<tmdb-api-key>
 ```
 
------
+### Docker Deployment
 
-## Available Scripts
+```bash
+# Create .env at project root with:
+# POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, JWT_SECRET
 
-### Backend (`/backend`)
+docker compose up -d
+```
 
-  * `npm run dev`: Starts the dev server with `ts-node-dev`.
-  * `npm run build`: Compiles TypeScript to JavaScript.
-  * `npm run start`: Runs the compiled JavaScript (for production).
-  * `npm run seed`: Runs the `backend/db/seed.ts` script to populate the database.
+Services will be available at:
 
-### Frontend (`/frontend`)
+- Frontend: http://localhost
+- Backend API: http://localhost/api
+- Database: localhost:5432 (remove port mapping in production)
 
-  * `npm run dev`: Starts the Vite dev server.
-  * `npm run build`: Builds the app for production.
-  * `npm run preview`: Previews the production build locally.
+## Project Structure
 
------
+```
+kindred/
+├── backend/
+│   ├── src/server.ts           # Express app entry
+│   ├── routes/                 # Route definitions
+│   ├── controllers/            # Request handlers
+│   ├── services/               # Business logic
+│   │   ├── vectorService.ts    # Profile vector calculation
+│   │   ├── kinService.ts       # Similarity queries
+│   │   └── jobs/               # Cron job services
+│   ├── middleware/             # Auth middleware
+│   ├── db/                     # Database connection, seeds
+│   ├── config/                 # Auth config
+│   ├── errors/                 # Custom error classes
+│   └── types/                  # TypeScript interfaces
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx             # Route definitions
+│   │   ├── api.ts              # Axios instance, API functions
+│   │   ├── components/         # Shared components
+│   │   ├── pages/              # Route components
+│   │   ├── features/
+│   │   │   └── tierlist/       # Tier list feature module
+│   │   │       ├── components/ # DnD and Tap interfaces
+│   │   │       ├── context/    # Page-level state
+│   │   │       └── util/       # State transformers
+│   │   ├── hooks/              # Custom hooks
+│   │   ├── context/            # Global contexts
+│   │   └── types/              # TypeScript interfaces
+│   └── nginx.conf              # Production proxy config
+└── docker-compose.yml
+```
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-<a id="-português"></a>
-## 🇧🇷 Português
-
-### Kindred (Versão em Português)
-
-Uma aplicação web full-stack que quantifica o "gosto" do usuário e descobre usuários compatíveis através de um algoritmo de similaridade de vetores baseado em características.
-
-## Demonstração ao Vivo & Capturas de Tela
-
-*   **Aplicação ao Vivo:** [Link para o seu site no Render/Vercel]
-
-## Funcionalidades
-
-*   **Interface de Classificação de Modo Duplo:** Experimente um processo de classificação contínuo com uma interface fluida de **arrastar e soltar** (drag-and-drop) no desktop e um sistema intuitivo de **tocar para classificar** (tap-to-rank) no mobile. O design responsivo garante uma ótima experiência em qualquer dispositivo.
-*   **Autenticação Segura e Moderna:** Sua conta é protegida com um sistema de autenticação robusto usando JWTs, que são armazenados de forma segura em cookies `httpOnly` para prevenir vulnerabilidades web comuns.
-*   **Listas de Tiers Persistentes e Compartilháveis:** Nunca perca seu trabalho. Todas as suas classificações são salvas automaticamente no seu perfil e podem ser revisitadas e atualizadas a qualquer momento.
-*   **Descubra seus "Kin":** Vá além de simples classificações e encontre usuários que realmente compartilham seus gostos cinematográficos. A página "Kin" apresenta uma lista ordenada de usuários com base em uma pontuação profunda de similaridade de "DNA de gosto".
-*   **O Algoritmo "DNA de Gosto":** A principal inovação do projeto. Em vez de apenas comparar filme por filme, ele analisa suas preferências entre gêneros, diretores e décadas para construir um perfil vetorial único do seu gosto, permitindo uma correspondência de usuários mais significativa.
-
-## Conceito Principal: O Algoritmo "DNA de Gosto"
-
-Em vez de apenas conectar você com pessoas que gostam dos mesmos filmes, o Kindred tenta entender a *essência* do seu gosto — os gêneros, diretores e épocas que te atraem. Em seguida, ele encontra outros usuários que compartilham esse mesmo "DNA de Gosto" subjacente, mesmo que vocês não tenham classificado o mesmo conjunto de filmes.
-
-Isso é alcançado através de um sistema de duas partes:
-
-### 1\. O Caminho de Escrita (Calculando o Vetor)
-
-Quando um usuário salva uma tier list, uma função `recalculateProfileVector` do tipo "dispare e esqueça" é acionada no backend.
-
-1.  **Coleta de Dados:** O serviço busca *todos* os itens que o usuário já classificou.
-2.  **Mapeamento:** A tier de cada item (S-F) é mapeada para uma pontuação (ex: `S: +3`, `A: +2`, `F: -2`).
-3.  **Agregação:** O sistema agrega essas pontuações para cada *característica* associada aos itens (ex: `Ação`, `Anos 90`, `Christopher Nolan`).
-4.  **Encolhimento (Média Bayesiana):** Para evitar vieses de baixa contagem (ex: classificar um único filme de "Ação" como "S"), a pontuação final de afinidade para cada característica é calculada usando uma fórmula de "amortecimento":
-    `afinidade = pontuacaoTotal / (k + contagem)`
-      * `pontuacaoTotal`: A soma das pontuações para uma característica (ex: `+25` para "Ação").
-      * `contagem`: O número de itens de "Ação" classificados.
-      * `k`: Um fator de amortecimento fixo (ex: `3`).
-5.  **Armazenamento:** O `vetor(256)` final é salvo na tabela `users`.
-
-### 2\. O Caminho de Leitura (Encontrando Usuários Similares)
-
-Quando um usuário visita a página "Kin", o backend executa uma busca rápida e indexada.
-
-1.  **Métrica:** A similaridade é definida pela `Similaridade de Cosseno`, que mede o *ângulo* entre dois vetores de perfil, ignorando a magnitude.
-2.  **Banco de Dados:** PostgreSQL com a extensão `pg_vector`.
-3.  **Consulta:** Usamos o operador `<=>` (Distância de Cosseno).
-4.  **Desempenho:** A busca é quase instantânea (mesmo com milhões de usuários) usando um índice `ivfflat` (Inverted File Flat) na coluna `profile_vector`.
-
-## Tecnologias Utilizadas
-
-  * **Monorepo:** Gerenciado com npm workspaces.
-  * **Frontend:**
-      * React 19 (Vite + SWC)
-      * TypeScript
-      * Tailwind CSS (estilização)
-      * TanStack Query (`@tanstack/react-query`) para gerenciamento de estado do servidor.
-      * `@hello-pangea/dnd` para a interface de arrastar e soltar.
-  * **Backend:**
-      * Node.js
-      * Express (roteamento e middleware)
-      * TypeScript
-      * `jsonwebtoken` (JWTs para autenticação)
-      * `bcryptjs` (hashing de senhas)
-  * **Banco de Dados:**
-      * PostgreSQL
-      * `pg_vector` (armazenamento de vetores e busca por similaridade)
-      * `node-postgres` (`pg`) como o driver do banco de dados.
-
-## Começando (Desenvolvimento Local)
-
-### Pré-requisitos
-
-  * Node.js (v18+)
-  * npm (v9+) ou um gerenciador de pacotes compatível.
-  * Uma instância do PostgreSQL (v16+) em execução.
-  * Uma Chave de API do TMDB (para o script de seed do banco de dados).
-
-### 1\. Configuração Inicial
-
-```bash
-# 1. Clone o repositório
-git clone https://github.com/lucas-queiroz-sena2005/kindred.git
-cd kindred
-
-# 2. Instale todas as dependências a partir do diretório raiz
-npm install
-```
-
-### 2\. Configuração do Backend
-
-1.  **Navegue até o backend:**
-    ```bash
-    cd backend
-    ```
-2.  **Configure o PostgreSQL:**
-      * Crie um usuário e um banco de dados.
-      * **Importante:** Você deve instalar e habilitar a extensão `vector`. Se estiver executando o Postgres localmente (não em Docker), pode ser necessário executar `sudo apt install postgresql-16-pgvector`. Depois, conecte-se ao seu banco de dados e execute `CREATE EXTENSION vector;`.
-3.  **Crie o arquivo `.env`:**
-      * Crie um arquivo `.env` no diretório `backend/`.
-      * Use a estrutura fornecida na seção "Variáveis de Ambiente" abaixo.
-4.  **Execute o Schema do Banco de Dados:**
-      * Use um cliente `psql` para executar o arquivo `database.sql` (localizado em `/backend/db/`) no seu novo banco de dados. Isso criará todas as tabelas, views e índices.
-    ```bash
-    psql "SUA_URL_DO_BANCO_DE_DADOS" < ./db/database.sql
-    ```
-5.  **Popule o Banco de Dados (Opcional, mas Recomendado):**
-      * Este script busca dados do TMDB e popula as tabelas `movies`, `directors` e `genres`.
-    ```bash
-    npm run seed # Deve ser executado a partir do diretório /backend
-    ```
-6.  **Execute o Servidor Backend:**
-    ```bash
-    npm run dev # Deve ser executado a partir do diretório /backend
-    ```
-    O servidor estará rodando em `http://localhost:3001`.
-
-### 3\. Configuração do Frontend
-
-1.  **Navegue até o frontend:**
-    ```bash
-    cd frontend
-    ```
-2.  **Execute a Aplicação Frontend:**
-    ```bash
-    npm run dev # Deve ser executado a partir do diretório /frontend
-    ```
-    A aplicação estará rodando em `http://localhost:5173`.
-
-## Variáveis de Ambiente
-
-O backend requer um arquivo `.env` em `/backend`.
-
-```dotenv
-# Exemplo de arquivo .env
-
-# URL para o banco de dados PostgreSQL.
-DATABASE_URL="postgresql://SEU_USUARIO:SUA_SENHA@localhost:5432/SEU_BANCO_DE_DADOS"
-
-# Uma string forte e aleatória para assinar os JWTs.
-JWT_SECRET="SUA_CHAVE_SUPER_SECRETA"
-
-# Chave de API do The Movie Database (TMDB) para o script de seed.
-TMDB_API_KEY="SUA_CHAVE_TMDB"
-```
-
-## Scripts Disponíveis
-
-### Backend (`/backend`)
-
-  * `npm run dev`: Inicia o servidor de desenvolvimento com `ts-node-dev`.
-  * `npm run build`: Compila o TypeScript para JavaScript.
-  * `npm run start`: Executa o JavaScript compilado (para produção).
-  * `npm run seed`: Executa o script `backend/db/seed.ts` para popular o banco de dados.
-
-### Frontend (`/frontend`)
-
-  * `npm run dev`: Inicia o servidor de desenvolvimento do Vite.
-  * `npm run build`: Constrói a aplicação para produção.
-  * `npm run preview`: Pré-visualiza a build de produção localmente.
-
-## Licença
-
-Este projeto está licenciado sob a Licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+MIT
