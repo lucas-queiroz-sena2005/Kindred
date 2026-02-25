@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 function Navbar(): React.ReactElement {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const activeClassName = "text-purple-600 dark:text-purple-400 font-semibold";
 

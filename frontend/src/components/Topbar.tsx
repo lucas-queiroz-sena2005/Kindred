@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import ThemeToggleButton from "./ThemeToggleButton";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { useAuth } from "../hooks/useAuth";

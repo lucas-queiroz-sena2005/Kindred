@@ -1,7 +1,5 @@
 import axios, { isAxiosError, AxiosError } from "axios";
-import type {
-  AxiosResponse, // Importe AxiosResponse como tipo
-} from "axios";
+import type { AxiosResponse } from "axios";
 import type { LoginCredentials, RegisterCredentials, User } from "./types/auth";
 import type {
   TierListData,

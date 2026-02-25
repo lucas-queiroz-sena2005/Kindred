@@ -7,7 +7,7 @@ import { authConfig } from "../config/authConfig.js";
 export async function registerUser(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     // Call for registration
@@ -31,7 +31,7 @@ export async function registerUser(
 export async function loginUser(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     // Call for login
