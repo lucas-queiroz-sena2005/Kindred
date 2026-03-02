@@ -11,60 +11,44 @@ interface GetKinListQueryParams {
   offset: number;
 }
 
-function validateGetKinListQueryParams(
-  query: AuthenticatedRequest["query"],
+export function validateGetKinListQueryParams(
+  query: Record<string, any>,
 ): GetKinListQueryParams {
-  const FILTERS = ["all", "connected", "unconnected"] as const;
-  const VALID_SORT_BY = ["overall", ...FEATURE_NAMES];
-  const VALID_QUERY_PARAMS = ["filter", "sortBy", "limit", "offset"];
+  const VALID_KEYS = ["filter", "sortBy", "limit", "offset"];
 
-  // 1. Reject any unknown query parameters to enforce a strict API contract.
-  for (const param in query) {
-    if (!VALID_QUERY_PARAMS.includes(param)) {
-      throw new ApiError(
-        `Unknown query parameter: '${param}'. Valid parameters are: ${VALID_QUERY_PARAMS.join(", ")}`,
-        400,
-      );
-    }
-  }
+  // 1. Strict Key Check
+  Object.keys(query).forEach((key) => {
+    if (!VALID_KEYS.includes(key))
+      throw new ApiError(`Unknown parameter: ${key}`, 400);
+  });
 
-  // 2. Validate each parameter, applying defaults if they are not provided.
-  const filter = query.filter as GetKinListQueryParams["filter"] | undefined;
-  if (filter && !FILTERS.includes(filter)) {
-    throw new ApiError(
-      `Invalid filter. Must be one of: ${FILTERS.join(", ")}`,
-      400,
-    );
-  }
+  // 2. Helper for Range/Defaults
+  const parseNum = (
+    val: any,
+    fallback: number,
+    min: number,
+    max = Infinity,
+  ) => {
+    const num = val ? parseInt(val, 10) : fallback;
+    if (isNaN(num) || num < min || num > max)
+      throw new ApiError(`Invalid number`, 400);
+    return num;
+  };
 
-  const sortBy = query.sortBy as GetKinListQueryParams["sortBy"] | undefined;
-  if (sortBy && !VALID_SORT_BY.includes(sortBy)) {
-    throw new ApiError(
-      `Invalid sortBy. Must be one of: ${VALID_SORT_BY.join(", ")}`,
-      400,
-    );
-  }
+  const filter = query.filter ?? "all";
+  const sortBy = query.sortBy ?? "overall";
 
-  const limitStr = query.limit as string | undefined;
-  const limit = limitStr ? parseInt(limitStr, 10) : 50;
-  if (isNaN(limit) || limit < 1 || limit > 100) {
-    throw new ApiError(
-      "Invalid limit. Must be a number between 1 and 100.",
-      400,
-    );
-  }
-
-  const offsetStr = query.offset as string | undefined;
-  const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
-  if (isNaN(offset) || offset < 0) {
-    throw new ApiError("Invalid offset. Must be a non-negative number.", 400);
-  }
+  // 3. Simple Inclusion Checks
+  if (!["all", "connected", "unconnected"].includes(filter))
+    throw new ApiError("Invalid filter", 400);
+  if (!["overall", ...FEATURE_NAMES].includes(sortBy))
+    throw new ApiError("Invalid sortBy", 400);
 
   return {
-    filter: filter || "all",
-    sortBy: sortBy || "overall",
-    limit,
-    offset,
+    filter,
+    sortBy,
+    limit: parseNum(query.limit, 50, 1, 100),
+    offset: parseNum(query.offset, 0, 0),
   };
 }
 
@@ -90,7 +74,6 @@ export async function getKins(
     next(error);
   }
 }
-
 
 export function getKinCategories(req: Request, res: Response) {
   const categories = ["overall", ...FEATURE_NAMES];
