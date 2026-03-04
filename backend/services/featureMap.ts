@@ -1,5 +1,5 @@
 export const VECTOR_DIMENSION = 256;
-export const k_DAMPENING_FACTOR = 3;
+export const k_DAMPENING_FACTOR = 4;
 
 // Tier weight map 'tier' (0-5)
 export const TIER_WEIGHTS = {

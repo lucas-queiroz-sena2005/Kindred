@@ -8,7 +8,7 @@ import {
 import { ApiError } from "../errors/customErrors.js";
 import { PoolClient } from "pg";
 
-interface UserRankingFeature {
+export interface UserRankingFeature {
   tier: number;
   features: string[];
 }
@@ -48,7 +48,7 @@ async function getAllUserRankings(
 /**
  * Aggregates raw rankings into score and count vectors based on movie features.
  */
-function aggregateFeatureScores(allRankings: UserRankingFeature[]): {
+export function aggregateFeatureScores(allRankings: UserRankingFeature[]): {
   total_score_vector: number[];
   feature_count_vector: number[];
 } {
@@ -74,7 +74,7 @@ function aggregateFeatureScores(allRankings: UserRankingFeature[]): {
  * Calculates the final profile vector using a Bayesian average (dampened mean).
  * This prevents features with very few rankings from having an outsized impact.
  */
-function calculateDampenedVector(
+export function calculateDampenedVector(
   total_score_vector: number[],
   feature_count_vector: number[],
 ): number[] {

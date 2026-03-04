@@ -3,24 +3,37 @@ import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { ApiError } from "../errors/customErrors.js";
 import * as MessageService from "../services/messageService.js";
 
-function validateRequest(req: AuthenticatedRequest) {
-  const userId = req.user!.id;
-  const targetIdParam = req.params.targetId || (req.query.targetId as string);
-  const targetId = parseInt(targetIdParam, 10);
+export function validateRequest(
+  userId: number | undefined,
+  targetIdInput: string | number | undefined,
+) {
+  if (!userId) {
+    throw new ApiError("Authentication required.", 401);
+  }
+  const targetId =
+    typeof targetIdInput === "string"
+      ? parseInt(targetIdInput, 10)
+      : targetIdInput;
 
-  if (isNaN(targetId)) {
+  if (targetId === undefined || isNaN(targetId as number)) {
     throw new ApiError("Target ID must be a valid number.", 400);
   }
+
   if (userId === targetId) {
     throw new ApiError("Cannot perform this action on self.", 400);
   }
 
-  return { userId, targetId };
+  return { userId, targetId: targetId as number };
 }
 
-function validateGetListParams(req: AuthenticatedRequest) {
-  const limitStr = req.query.limit as string | undefined;
-  const limit = limitStr ? parseInt(limitStr, 10) : 50;
+export function validateGetListParams(
+  limitInput: number | string | undefined,
+  offsetInput: number | string | undefined,
+) {
+  const parseValue = (val: any) =>
+    typeof val === "string" ? parseInt(val, 10) : val;
+
+  const limit = limitInput !== undefined ? parseValue(limitInput) : 50;
   if (isNaN(limit) || limit < 1 || limit > 100) {
     throw new ApiError(
       "Invalid limit. Must be a number between 1 and 100.",
@@ -28,21 +41,28 @@ function validateGetListParams(req: AuthenticatedRequest) {
     );
   }
 
-  const offsetStr = req.query.offset as string | undefined;
-  const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
+  const offset = offsetInput !== undefined ? parseValue(offsetInput) : 0;
   if (isNaN(offset) || offset < 0) {
     throw new ApiError("Invalid offset. Must be a non-negative number.", 400);
   }
+
   return { limit, offset };
 }
+
 export async function getMessages(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const { userId, targetId } = validateRequest(req);
-    const { limit, offset } = validateGetListParams(req);
+    const { userId, targetId } = validateRequest(
+      req.user?.id,
+      req.params.targetId,
+    );
+    const { limit, offset } = validateGetListParams(
+      req.params.limit,
+      req.params.offset,
+    );
 
     const messages = await MessageService.getMessages(
       userId,
@@ -62,7 +82,10 @@ export async function sendMessage(
   next: NextFunction,
 ) {
   try {
-    const { userId, targetId } = validateRequest(req);
+    const { userId, targetId } = validateRequest(
+      req.user?.id,
+      req.params.targetId,
+    );
     const { message } = req.body;
 
     if (
