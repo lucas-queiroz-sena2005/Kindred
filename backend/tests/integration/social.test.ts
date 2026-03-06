@@ -9,6 +9,10 @@ const state = vi.hoisted(() => ({
 
 const mocks = vi.hoisted(() => ({
   dbQuery: vi.fn(),
+  dbConnect: vi.fn().mockResolvedValue({
+    query: vi.fn().mockResolvedValue({ rows: [{ now: new Date() }] }),
+    release: vi.fn(),
+  }),
   getStatus: vi.fn(),
   askConnection: vi.fn(),
   cancelConnection: vi.fn(),
@@ -22,7 +26,10 @@ function connectionKey(a: number, b: number): string {
 }
 
 vi.mock("../../db/db.js", () => ({
-  default: { query: mocks.dbQuery },
+  default: {
+    query: mocks.dbQuery,
+    connect: mocks.dbConnect,
+  },
 }));
 
 vi.mock("../../services/connectionService.js", () => ({
@@ -67,7 +74,10 @@ describe("Social & Messaging Integration", () => {
     mocks.getStatus.mockImplementation(async (userId, targetId) => {
       const key = connectionKey(userId, targetId);
       const status = state.connections.get(key) ?? "not_connected";
-      return { status: status === "pending" ? "pending_from_user" : status };
+      if (status === "pending") {
+        return { status: "pending_from_user" };
+      }
+      return { status: state.connections.get(key) || "not_connected" };
     });
 
     mocks.askConnection.mockImplementation(async (userId, targetId) => {

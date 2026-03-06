@@ -9,11 +9,17 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - backend_net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 64M
     volumes:
-      - pgdata:/var/lib/postgresql/data
       - ./backend/db/database.sql:/docker-entrypoint-initdb.d/init.sql
 
   backend:
@@ -24,12 +30,34 @@ services:
       db:
         condition: service_healthy
     environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      FRONTEND_URL: ${FRONTEND_URL}
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       TMDB_API_KEY: ${TMDB_API_KEY}
       PORT: 5000
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:5000/api').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - backend_net
+      - frontend_net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
 
   frontend:
     build:
@@ -38,10 +66,26 @@ services:
         - VITE_API_URL=${VITE_API_URL}
     container_name: kindred-frontend
     restart: always
+    networks:
+      - frontend_net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
     ports:
-      - "80:80"
+      - "80:8080"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    internal: true
 
 volumes:
   pgdata:

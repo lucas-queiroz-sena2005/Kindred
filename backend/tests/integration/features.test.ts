@@ -15,6 +15,10 @@ const state = vi.hoisted(() => ({
 
 const mocks = vi.hoisted(() => ({
   dbQuery: vi.fn(),
+  dbConnect: vi.fn().mockResolvedValue({
+    query: vi.fn().mockResolvedValue({ rows: [{ now: new Date() }] }),
+    release: vi.fn(),
+  }),
   getTmdbConfig: vi.fn(),
   getTierlistList: vi.fn(),
   getTierlistById: vi.fn(),
@@ -24,7 +28,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../../db/db.js", () => ({
-  default: { query: mocks.dbQuery },
+  default: {
+    query: mocks.dbQuery,
+    connect: mocks.dbConnect,
+  },
 }));
 
 vi.mock("../../services/configService.js", () => ({
