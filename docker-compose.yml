@@ -18,8 +18,9 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 64M
+          memory: 256M
     volumes:
+      - pgdata:/var/lib/postgresql/data #This line
       - ./backend/db/database.sql:/docker-entrypoint-initdb.d/init.sql
 
   backend:
@@ -35,6 +36,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       TMDB_API_KEY: ${TMDB_API_KEY}
+      SYNC_INTERVAL_MINUTES: ${SYNC_INTERVAL_MINUTES}
       PORT: 5000
     healthcheck:
       test:

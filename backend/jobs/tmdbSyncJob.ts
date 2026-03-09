@@ -1,16 +1,32 @@
 import cron from "node-cron";
 import { TmdbSyncService } from "../services/jobs/tmdbSyncService.js";
 
+const JOB_NAME = "daily_tmdb_sync";
+
 const setupTmdbSyncJob = () => {
-  // Run daily at midnight
-  cron.schedule("0 0 * * *", async () => {
+  cron.schedule("*/1 * * * *", async () => {
+    console.log(`[${JOB_NAME}] Cron heartbeat: checking if ready...`);
     try {
-      console.log("Starting daily TMDB synchronization...");
-      await TmdbSyncService.updateConfiguration(); // Refresh image CDN paths
-      await TmdbSyncService.syncChangedMedia(); // Refresh movie data
-      console.log("Sync complete.");
-    } catch (error) {
-      console.error("Error during daily TMDB synchronization:", error);
+      const ready = await TmdbSyncService.canRunJob(JOB_NAME);
+      if (!ready) return;
+
+      console.log(`[${JOB_NAME}] Interval reached. Starting sync...`);
+      await TmdbSyncService.setJobStatus(JOB_NAME, "running");
+
+      await TmdbSyncService.updateConfiguration();
+      await TmdbSyncService.syncChangedMedia();
+
+      await TmdbSyncService.setJobStatus(JOB_NAME, "success", {
+        message: "Sync complete",
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error(`[${JOB_NAME}] Error:`, errorMessage);
+
+      await TmdbSyncService.setJobStatus(JOB_NAME, "failed", {
+        error: errorMessage,
+      });
     }
   });
 };

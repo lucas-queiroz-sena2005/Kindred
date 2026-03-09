@@ -8,6 +8,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ----------------------------------------------------------
 -- Configuration & Metadata
 -- ----------------------------------------------------------
+CREATE TYPE status_type AS ENUM ('success', 'running', 'failed');
 
 CREATE TABLE tmdb_config (
     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -15,6 +16,13 @@ CREATE TABLE tmdb_config (
     secure_base_url VARCHAR(255) NOT NULL,
     poster_sizes TEXT[] NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE job_sync_log (
+    job_name TEXT PRIMARY KEY,
+    last_run_at TIMESTAMP WITH TIME ZONE,
+    type status_type NOT NULL,
+    metadata JSONB
 );
 
 -- ----------------------------------------------------------

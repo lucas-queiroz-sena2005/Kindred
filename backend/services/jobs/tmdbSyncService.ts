@@ -5,6 +5,7 @@ import { QueryResult } from "pg";
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE = "https://api.themoviedb.org/3";
+const SYNC_INTERVAL = parseInt(process.env.SYNC_INTERVAL_MINUTES || "1440", 10);
 
 // Type definitions for TMDB API responses
 interface TmdbConfiguration {
@@ -27,6 +28,7 @@ interface TmdbMovieDetails {
   title: string;
   poster_path: string;
 }
+type JobStatus = "success" | "running" | "failed";
 
 export const TmdbSyncService = {
   /**
@@ -97,5 +99,41 @@ export const TmdbSyncService = {
         [detail.data.title, detail.data.poster_path, id],
       );
     }
+  },
+
+  async canRunJob(jobName: string): Promise<boolean> {
+    const res = await pool.query<{ last_run_at: Date; type: JobStatus }>(
+      `SELECT last_run_at, type FROM job_sync_log WHERE job_name = $1`,
+      [jobName],
+    );
+
+    if (res.rows.length === 0) return true;
+
+    const { last_run_at, type } = res.rows[0];
+
+    // Block if already running
+    if (type === "running") return false;
+
+    const lastRun = new Date(last_run_at);
+    const now = new Date();
+    const diffInMinutes = (now.getTime() - lastRun.getTime()) / (1000 * 60);
+
+    return diffInMinutes >= SYNC_INTERVAL;
+  },
+
+  async setJobStatus(
+    jobName: string,
+    status: JobStatus,
+    metadata: Record<string, unknown> = {},
+  ): Promise<void> {
+    await pool.query(
+      `INSERT INTO job_sync_log (job_name, last_run_at, type, metadata)
+       VALUES ($1, NOW(), $2, $3)
+       ON CONFLICT (job_name) DO UPDATE SET 
+       type = EXCLUDED.type, 
+       last_run_at = NOW(),
+       metadata = EXCLUDED.metadata`,
+      [jobName, status, JSON.stringify(metadata)],
+    );
   },
 };
