@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+/* Prevent horizontal scroll and empty space on mobile */
+html, body {
+  overflow-x: hidden;
+}
+#root {
+  overflow-x: hidden;
+}

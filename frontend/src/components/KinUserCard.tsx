@@ -62,14 +62,14 @@ export function KinUserCard({
       className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 hover:shadow-md transition-shadow h-fit cursor-pointer"
       onClick={onToggle}
     >
-      <article className="flex justify-between items-start">
-        <div className="flex-grow">
+      <article className="flex justify-between items-start gap-3 min-w-0">
+        <div className="flex-grow min-w-0">
           <h3 className="font-bold text-lg text-neutral-800">
             {user.username}
           </h3>
           <p className="text-sm text-neutral-500">Compatible User</p>
           <div className="mt-4 pt-4 border-t border-neutral-100">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleDetailsClick}
                 className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300 z-10 relative"
@@ -94,7 +94,7 @@ export function KinUserCard({
             {isMessageOpen && <KinMessaging targetId={user.id} />}
           </div>
         </div>
-        <div className="text-right flex-shrink-0">
+        <div className="text-right flex-shrink-0 min-w-[4.5rem]">
           <span className="block text-2xl font-bold text-purple-600">
             {percentage}%
           </span>

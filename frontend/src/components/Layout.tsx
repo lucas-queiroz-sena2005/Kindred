@@ -25,10 +25,10 @@ function Layout(): React.ReactElement {
   }, [notificationCount]);
 
   return (
-    <div className="min-h-screen font-sans bg-neutral-50 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50 flex flex-col">
+    <div className="min-h-screen font-sans bg-neutral-50 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50 flex flex-col overflow-x-hidden">
       <Topbar />
       <Navbar />
-      <main className="w-full max-w-6xl mx-auto px-8 pt-36 pb-24">
+      <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 pb-24 min-w-0">
         <Outlet />
       </main>
       <Footer />

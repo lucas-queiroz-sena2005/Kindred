@@ -34,8 +34,8 @@ function TierListPage(): React.ReactElement {
     <TierListPageProvider>
       <h1 className="text-3xl font-bold mb-4">{data?.title || "Tier List"}</h1>
       <p className="mb-6 text-gray-600">{data?.description}</p>
-      <div className="flex flex-row gap-6">
-        <div className="flex-grow">
+      <div className="flex flex-col lg:flex-row gap-6 min-w-0">
+        <div className="flex-grow min-w-0">
           <TierList 
             templateData={data} 
             isLoading={isLoading} 

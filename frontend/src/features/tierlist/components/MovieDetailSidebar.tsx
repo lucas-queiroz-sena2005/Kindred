@@ -12,7 +12,7 @@ export const MovieDetailSidebar: React.FC = () => {
 
   if (!selectedMovie) {
     return (
-      <div className="w-64 p-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+      <div className="w-full lg:w-64 p-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg flex-shrink-0">
         <h3 className="font-bold text-lg mb-2">Movie Details</h3>
         <p className="text-neutral-500">Select a movie to see its details.</p>
       </div>
@@ -23,7 +23,7 @@ export const MovieDetailSidebar: React.FC = () => {
   const imageUrl = getImageUrl(selectedMovie.poster_path || '', 'w342');
 
   return (
-    <div className="w-64 p-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg relative movie-detail-sidebar">
+    <div className="w-full lg:w-64 p-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg relative movie-detail-sidebar flex-shrink-0">
       <button 
         onClick={handleClose} 
         className="absolute top-2 right-2 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 font-bold text-xl"

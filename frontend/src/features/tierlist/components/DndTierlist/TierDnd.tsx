@@ -19,14 +19,14 @@ export default function TierDnd({ tier, onMovieSelect }: TierDndProps): React.Re
   const tierColorClass = tierMetadata?.colorClass || "bg-gray-700";
 
   return (
-    <div className="flex">
-      <div className={`w-32 py-8 text-center ${tierColorClass}`}>
+    <div className="flex min-w-0">
+      <div className={`w-16 sm:w-32 py-4 sm:py-8 text-center text-sm sm:text-base flex-shrink-0 ${tierColorClass}`}>
         {tier.title}
       </div>
       <Droppable droppableId={tier.id} direction="horizontal">
         {(provided) => (
           <div
-            className="pl-4 flex flex-nowrap items-center gap-4 border w-full select-none overflow-x-auto"
+            className="pl-2 sm:pl-4 flex flex-nowrap items-center gap-2 sm:gap-4 border flex-1 min-w-0 select-none overflow-x-auto"
             ref={provided.innerRef}
             {...provided.droppableProps}
           >

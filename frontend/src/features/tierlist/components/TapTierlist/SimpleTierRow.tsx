@@ -16,11 +16,11 @@ export default function SimpleTierRow({ tier, onSelectMovie }: SimpleTierRowProp
   const tierColorClass = tierMetadata?.colorClass || UNRANKED_TIER.colorClass; // Default to unranked color
 
   return (
-    <div className="flex items-stretch min-h-[100px] mb-1 border border-gray-700 rounded">
-      <div className={`flex items-center justify-center w-28 text-white font-bold text-xl ${tierColorClass}`}>
+    <div className="flex items-stretch min-h-[72px] sm:min-h-[100px] mb-1 border border-gray-700 rounded min-w-0">
+      <div className={`flex items-center justify-center w-16 sm:w-28 text-white font-bold text-sm sm:text-xl flex-shrink-0 ${tierColorClass}`}>
         {tier.title}
       </div>
-      <div className="flex-1 bg-gray-700 p-2 flex items-center gap-2 overflow-x-auto min-h-[100px]">
+      <div className="flex-1 min-w-0 bg-gray-700 p-2 flex items-center gap-2 overflow-x-auto min-h-[72px] sm:min-h-[100px]">
         {tier.items.map((movie) => (
           <TappableMovieItem key={movie.id} movie={movie} onSelect={onSelectMovie} />
         ))}
