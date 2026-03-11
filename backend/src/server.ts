@@ -113,7 +113,7 @@ async function bootstrap() {
 
     startJobs();
 
-    app.listen(PORT, () => {
+    app.listen(Number(PORT), "0.0.0.0", () => {
       console.log(
         `🚀 [SERVER] Running on port ${PORT} [${process.env.NODE_ENV}]`,
       );
