@@ -12,6 +12,7 @@ RUN chown -R node:node /app
 COPY package*.json ./
 RUN npm ci --only=production 
 COPY --from=builder /app/dist ./dist 
+COPY --from=builder /app/db ./db
 USER node
 EXPOSE 5000
 CMD ["node", "dist/src/server.js"]
