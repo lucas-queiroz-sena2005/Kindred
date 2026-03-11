@@ -7,7 +7,6 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const SYNC_INTERVAL = parseInt(process.env.SYNC_INTERVAL_MINUTES || "1440", 10);
 
-// Type definitions for TMDB API responses
 interface TmdbConfiguration {
   images: {
     base_url: string;
@@ -56,20 +55,12 @@ export const TmdbSyncService = {
     );
   },
 
-  /**
-   * The 24-hour Sync Logic:
-   * 1. Check which IDs changed on TMDB in the last 24h.
-   * 2. Compare against our local tmdb_id database.
-   * 3. Update only the relevant records.
-   */
   async syncChangedMedia(): Promise<void> {
-    // Get list of local IDs
     const localRes: QueryResult<{ tmdb_id: number }> = await pool.query(
       `SELECT tmdb_id FROM movies WHERE tmdb_id IS NOT NULL`,
     );
     const localIds = new Set(localRes.rows.map((r) => r.tmdb_id));
 
-    // Get TMDB changes from last 24h
     const tmdbRes: AxiosResponse<TmdbChangesResponse> = await axios.get(
       `${TMDB_BASE}/movie/changes`,
       {
@@ -111,7 +102,6 @@ export const TmdbSyncService = {
 
     const { last_run_at, type } = res.rows[0];
 
-    // Block if already running
     if (type === "running") return false;
 
     const lastRun = new Date(last_run_at);

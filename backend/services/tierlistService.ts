@@ -27,7 +27,7 @@ export async function getAllTemplates(
         ? "WHERE ur.id IS NULL"
         : "";
 
-  const query = `--sql
+  const query = `
     SELECT
       tt.id,
       tt.title,
@@ -60,7 +60,7 @@ export async function getTierlistById(tierlistId: number, userId: number) {
   const template = templateRes.rows[0];
 
   const moviesRes = await pool.query(
-    `--sql
+    `
     SELECT
       m.id,
       m.title,
@@ -112,7 +112,7 @@ export async function saveUserRanking(
     await client.query("BEGIN");
 
     const templateCheck = await client.query(
-      `--sql
+      `
       SELECT id FROM tierlist_templates WHERE id = $1`,
       [templateId],
     );
@@ -122,7 +122,7 @@ export async function saveUserRanking(
 
     if (rankedItems.length > 0) {
       const movieIds = rankedItems.map((item) => item.movieId);
-      const validationQuery = `--sql
+      const validationQuery = `
         SELECT (
             SELECT COUNT(movie_id)::int FROM template_movies 
             WHERE template_id = $1 AND movie_id = ANY($2::int[])
@@ -144,7 +144,7 @@ export async function saveUserRanking(
     const {
       rows: [ranking],
     } = await client.query(
-      `--sql
+      `
       INSERT INTO user_rankings (user_id, template_id)
       VALUES ($1, $2)
       ON CONFLICT (user_id, template_id)
@@ -155,13 +155,13 @@ export async function saveUserRanking(
     );
 
     await client.query(
-      `--sql
+      `
       DELETE FROM ranked_items WHERE ranking_id = $1`,
       [ranking.id],
     );
 
     if (rankedItems.length) {
-      const insertQuery = `--sql
+      const insertQuery = `
         INSERT INTO ranked_items (ranking_id, movie_id, tier)
         SELECT $1, movie_id, tier
         FROM UNNEST($2::int[], $3::int[]) AS t(movie_id, tier)

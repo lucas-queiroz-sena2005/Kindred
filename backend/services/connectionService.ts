@@ -24,7 +24,7 @@ export async function askConnection(senderId: number, receiverId: number) {
     throw new ApiError("Users are already connected.", 400);
   }
 
-  const acceptQuery = `--sql
+  const acceptQuery = `
     WITH deleted_request AS (
       DELETE FROM connection_request 
       WHERE sender_id = $2 AND receiver_id = $1
@@ -45,7 +45,7 @@ export async function askConnection(senderId: number, receiverId: number) {
     return { status: "connected", message: "Connection established." };
   }
 
-  const insertQuery = `--sql
+  const insertQuery = `
     INSERT INTO connection_request (sender_id, receiver_id)
     VALUES ($1, $2)
     ON CONFLICT DO NOTHING
@@ -64,7 +64,7 @@ export async function getRequests(
   limit: number,
   offset: number,
 ) {
-  const query = `--sql
+  const query = `
     SELECT cr.sender_id, u.username, cr.created_at
     FROM connection_request cr
     JOIN users u ON cr.sender_id = u.id
@@ -81,7 +81,7 @@ export async function rejectConnectionRequest(
   userId: number,
   targetId: number,
 ) {
-  const query = `--sql
+  const query = `
     DELETE FROM connection_request
     WHERE sender_id = $2 AND receiver_id = $1
     RETURNING 1
@@ -93,7 +93,7 @@ export async function rejectConnectionRequest(
 export async function cancelConnection(userId: number, targetId: number) {
   const lowerId = Math.min(userId, targetId);
   const higherId = Math.max(userId, targetId);
-  const query = `--sql
+  const query = `
     DELETE FROM user_connections
     WHERE user_id_a = $1 AND user_id_b = $2
     RETURNING 1
@@ -145,7 +145,7 @@ export async function unblockUser(blockerId: number, blockedId: number) {
 }
 
 export async function getStatus(userId: number, targetId: number) {
-  const blockQuery = `--sql
+  const blockQuery = `
     SELECT blocker_id FROM user_blocks
     WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)
   `;
@@ -160,7 +160,7 @@ export async function getStatus(userId: number, targetId: number) {
 
   const lowerId = Math.min(userId, targetId);
   const higherId = Math.max(userId, targetId);
-  const connectionQuery = `--sql
+  const connectionQuery = `
     SELECT 1 FROM user_connections
     WHERE user_id_a = $1 AND user_id_b = $2
   `;
@@ -172,7 +172,7 @@ export async function getStatus(userId: number, targetId: number) {
     return { status: "connected" };
   }
 
-  const requestQuery = `--sql
+  const requestQuery = `
     SELECT
       CASE
         WHEN sender_id = $1 THEN 'pending_from_user'

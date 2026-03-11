@@ -25,14 +25,14 @@ export async function getMessages(
     }
 
     await client.query(
-      `--sql
+      `
       UPDATE messages
       SET is_read = TRUE
       WHERE receiver_id = $1 AND sender_id = $2 AND is_read = FALSE`,
       [userId, targetId],
     );
 
-    const query = `--sql
+    const query = `
     SELECT * FROM messages
     WHERE (sender_id = $1 AND receiver_id = $2) OR
         (receiver_id = $1 AND sender_id = $2)
@@ -87,7 +87,7 @@ export async function sendMessage(
     );
   }
 
-  const query = `--sql
+  const query = `
     INSERT INTO messages (sender_id, receiver_id, content)
     VALUES ($1, $2, $3)
     RETURNING *`;
@@ -100,7 +100,7 @@ export async function sendMessage(
 }
 
 export async function getConversations(userId: number) {
-  const query = `--sql
+  const query = `
     WITH last_message AS (
       SELECT
         CASE

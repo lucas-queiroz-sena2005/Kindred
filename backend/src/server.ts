@@ -3,6 +3,9 @@ import express, { Request, Response, NextFunction, Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import pool from "../db/db.js";
 import apiRoutes from "../routes/index.js";
 import { ApiError } from "../errors/customErrors.js";
@@ -13,120 +16,116 @@ const app: Express = express();
 const PORT = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === "production";
 const IS_TESTING = process.env.NODE_ENV === "test" || process.env.VITEST;
-app.set("trust proxy", "172.18.0.0/16");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    error: "Too Many Requests",
-    message: "Global rate limit exceeded. Please try again later.",
-  },
-});
+app.set("trust proxy", 1);
 
-const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 15,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    error: "Security Limit Exceeded",
-    message: "Too many authentication attempts. Please try again in an hour.",
-  },
-});
-
-app.use(globalLimiter);
-app.use(express.json({ limit: "10kb" }));
-app.use(cookieParser());
-app.use(express.static("public"));
+const limiter = (windowMs: number, max: number, message: string) =>
+  rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Rate Limit Exceeded", message },
+  });
 
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
-app.use(cors(corsOptions));
 
-app.use("/api/auth", authLimiter);
+app.use(limiter(15 * 60 * 1000, 100, "Global limit exceeded."));
+app.use(cors(corsOptions));
+app.use(express.json({ limit: "10kb" }));
+app.use(cookieParser());
+app.use(express.static("public"));
+
+app.use("/api/auth", limiter(60 * 60 * 1000, 15, "Too many login attempts."));
 app.use("/api", apiRoutes);
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  const now = new Date().toISOString();
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  const status = err instanceof ApiError ? err.statusCode : 500;
 
-  console.error(`[${now}] 🔴 ERROR [${req.method}] ${req.path}`);
-  console.error(`Stack: ${err.stack}`);
-
-  if (err instanceof ApiError) {
-    return res.status(err.statusCode).json({
-      error: err.name,
-      message: err.message,
-    });
+  if (!IS_TESTING) {
+    console.error(
+      `[${new Date().toISOString()}] 🔴 ${req.method} ${req.path} - ${err.message}`,
+    );
+    if (status === 500) console.error(err.stack);
   }
 
   if (err instanceof SyntaxError && "body" in err) {
-    return res.status(400).json({
-      error: "Malformed JSON",
-      message: "The request body contains invalid JSON formatting.",
-    });
+    return res
+      .status(400)
+      .json({ error: "Invalid JSON", message: "Malformed body." });
   }
 
-  res.status(500).json({
-    error: "Internal Server Error",
-    message: IS_PROD
-      ? "An unexpected error occurred. Please contact support if this persists."
-      : err.message,
+  res.status(status).json({
+    error: err.name || "InternalError",
+    message:
+      IS_PROD && status === 500
+        ? "Something went wrong on our end."
+        : err.message,
   });
 });
 
-async function testDatabaseConnection() {
-  const start = Date.now();
+async function syncSchema(client: any) {
   try {
-    const client = await pool.connect();
-    const result = await client.query("SELECT NOW()");
-    const latency = Date.now() - start;
+    const tableCheck = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'users'
+      );
+    `);
 
-    console.log(`✅ [DATABASE] Connection established in ${latency}ms.`);
-    console.log(`🕒 [DATABASE] Current Server Time: ${result.rows[0].now}`);
+    if (!tableCheck.rows[0].exists) {
+      console.log(
+        "📂 [DB] No schema detected. Initializing from database.sql...",
+      );
+      const sqlPath = path.join(__dirname, "../../db/database.sql");
+      const sql = fs.readFileSync(sqlPath, "utf8");
 
-    client.release();
+      await client.query(sql);
+      console.log("✅ [DB] Schema initialized successfully.");
+    } else {
+      console.log("💎 [DB] Schema verified (tables exist).");
+    }
   } catch (err) {
-    console.error("❌ [DATABASE] Critical connection failure:", err);
-    process.exit(1);
+    console.error("❌ [DB] Schema sync failed:", err);
+    throw err;
   }
 }
 
-async function startServer() {
-  console.log("--------------------------------------------------");
-  console.log("🛠️  Initializing Kindred Production Server...");
-
-  await testDatabaseConnection();
-
-  // External Service Syncing
+async function bootstrap() {
+  let client;
   try {
-    await TmdbSyncService.updateConfiguration();
-    console.log("🎬 [TMDB] Configuration updated successfully.");
-  } catch (e) {
-    console.error(
-      "⚠️  [TMDB] Sync failed during startup, using cached config.",
+    const start = Date.now();
+    client = await pool.connect();
+
+    await syncSchema(client);
+    console.log(`✅ [DB] Connected & Synced (${Date.now() - start}ms)`);
+
+    await TmdbSyncService.updateConfiguration().catch(() =>
+      console.warn("⚠️  [TMDB] Sync failed, using cache."),
     );
+
+    startJobs();
+
+    app.listen(PORT, () => {
+      console.log(
+        `🚀 [SERVER] Running on port ${PORT} [${process.env.NODE_ENV}]`,
+      );
+    });
+  } catch (err) {
+    console.error("❌ [FATAL] Startup failed:", err);
+    process.exit(1);
+  } finally {
+    if (client) client.release();
   }
-
-  startJobs();
-
-  app.listen(PORT, () => {
-    console.log(`🚀 [SERVER] Listening at http://localhost:${PORT}`);
-    console.log(
-      `🏷️  [SERVER] Environment: ${process.env.NODE_ENV || "development"}`,
-    );
-    console.log("--------------------------------------------------");
-  });
 }
 
-if (!IS_TESTING) {
-  startServer();
-}
+if (!IS_TESTING) bootstrap();
 
 export default app;

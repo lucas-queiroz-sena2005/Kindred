@@ -24,7 +24,7 @@ export async function getKinListbyId(
       ? `GREATEST(0, (1 - (other.profile_vector <=> tu.profile_vector)))`
       : `GREATEST(0, (1 - ( ((other.profile_vector::real[])${sliceString})::vector <=> ((tu.profile_vector::real[])${sliceString})::vector )))`;
 
-  const query = `--sql
+  const query = `
     WITH TargetUser AS (
         SELECT profile_vector FROM users WHERE id = $1
     )
@@ -65,7 +65,7 @@ export async function compareKin(
     )
     .join(",\n");
 
-  const query = `--sql
+  const query = `
     SELECT
       -- 1. Overall Score (Total Taste DNA)
       GREATEST(0, (1 - (u1.profile_vector <=> u2.profile_vector))) AS "overallScore",

@@ -15,15 +15,14 @@ export interface UserRankingFeature {
 
 /**
  * Fetches all ranked movie features for a given user.
- * This query is optimized to use the pre-built `vw_movie_features` view,
- * avoiding costly lateral joins and making it much more performant.
+ * This query is optimized to use the pre-built `vw_movie_features` view
  */
 async function getAllUserRankings(
   client: PoolClient,
   userId: number,
 ): Promise<UserRankingFeature[]> {
   const { rows } = await client.query<UserRankingFeature>(
-    `--sql
+    `
     SELECT
       ri.tier,
       array_agg(DISTINCT f.feature_name) FILTER (WHERE f.feature_name IS NOT NULL) AS features
@@ -118,7 +117,7 @@ export async function recalculateProfileVector(userId: number) {
     // 4. Persist the new vector to the database.
     const vectorString = `[${new_profile_vector.join(",")}]`;
     const updateResult = await client.query(
-      `--sql
+      `
       UPDATE users SET profile_vector = $1 WHERE id = $2`,
       [vectorString, userId],
     );

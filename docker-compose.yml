@@ -20,7 +20,7 @@ services:
           cpus: "1.0"
           memory: 256M
     volumes:
-      - pgdata:/var/lib/postgresql/data #This line
+      - pgdata:/var/lib/postgresql/data
       - ./backend/db/database.sql:/docker-entrypoint-initdb.d/init.sql
 
   backend:

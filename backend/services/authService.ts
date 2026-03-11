@@ -17,7 +17,6 @@ export async function register(userData: UserData): Promise<RegisteredUser> {
   };
   validateRegistrationInput(trimmedData);
 
-  // Verify if content is clean
   if (
     filter.isProfane(trimmedData.username) ||
     filter.isProfane(trimmedData.email)
@@ -43,8 +42,7 @@ export async function register(userData: UserData): Promise<RegisteredUser> {
 
   // User insertion
   const newUserResult = await pool.query<{ id: number }>(
-    `--sql
-    INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id`,
+    `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id`,
     [trimmedData.username, trimmedData.email, hashedPassword],
   );
 
@@ -54,11 +52,10 @@ export async function register(userData: UserData): Promise<RegisteredUser> {
   const zeroVector = new Array(256).fill(0);
   const vectorString = `[${zeroVector.join(",")}]`;
 
-  await pool.query(
-    `--sql
-    UPDATE users SET profile_vector = $1 WHERE id = $2`,
-    [vectorString, newUserId],
-  );
+  await pool.query(`UPDATE users SET profile_vector = $1 WHERE id = $2`, [
+    vectorString,
+    newUserId,
+  ]);
 
   return { id: newUserId, username: trimmedData.username };
 }
@@ -74,7 +71,7 @@ export async function login(userData: UserData): Promise<RegisteredUser> {
     username: string;
     password_hash: string;
   }>(
-    `--sql
+    `sql
     SELECT id, username, password_hash FROM users WHERE username = $1`,
     [username.trim()],
   );
