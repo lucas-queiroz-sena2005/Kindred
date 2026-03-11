@@ -36,13 +36,13 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-app.use(limiter(15 * 60 * 1000, 100, "Global limit exceeded."));
+app.use(limiter(15 * 60 * 1000, 1000, "Global limit exceeded."));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 app.use(express.static("public"));
 
-app.use("/api/auth", limiter(60 * 60 * 1000, 15, "Too many login attempts."));
+app.use("/api/auth", limiter(60 * 60 * 1000, 100, "Too many login attempts."));
 app.use("/api", apiRoutes);
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
