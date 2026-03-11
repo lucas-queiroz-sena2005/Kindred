@@ -8,7 +8,6 @@ const jwtSecret = authConfig.JWT_SECRET;
 const jwtExpiry = authConfig.JWT_EXPIRY ?? "1h";
 const maxAge = authConfig.COOKIE_MAX_AGE;
 
-
 export function createToken(id: number, jwtSecret: string): string {
   const payload: JwtPayload = { id };
 
@@ -17,12 +16,11 @@ export function createToken(id: number, jwtSecret: string): string {
   });
 }
 
-
 export function setTokenCookie(res: Response, token: string): void {
   const cookieOptions: CookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "strict",
+    sameSite: "none",
     maxAge: maxAge,
   };
   res.cookie("token", token, cookieOptions);
