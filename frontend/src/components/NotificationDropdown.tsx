@@ -75,29 +75,29 @@ function NotificationDropdown(): React.ReactElement {
     : [];
 
   return (
-    <div className="absolute top-16 right-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md shadow-lg w-80">
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
-        <h3 className="font-semibold">Notifications</h3>
+    <div className="absolute top-full right-0 mt-1 sm:right-0 sm:mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md shadow-lg w-[min(20rem,calc(100vw-2rem))] max-h-[min(70vh,24rem)] flex flex-col overflow-hidden z-30">
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+        <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Notifications</h3>
       </div>
-      <div className="p-4">
+      <div className="p-2 overflow-y-auto flex-1 min-h-0">
         {isLoading ? (
-          <p>Loading...</p>
+          <p className="py-2 px-4 text-neutral-600 dark:text-neutral-400">Loading...</p>
         ) : groupedNotifications && groupedNotifications.length > 0 ? (
           groupedNotifications.slice(0, 10).map((notification) => (
             <Link
               to={getNotificationLink(notification)}
               key={notification.id}
-              className={`block py-2 px-4 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700 ${
+              className={`block py-2 px-4 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 ${
                 !notification.is_read
-                  ? "bg-purple-100 dark:bg-purple-900"
+                  ? "bg-purple-100 dark:bg-purple-900/50"
                   : ""
               }`}
             >
-              <p>{getNotificationMessage(notification)}</p>
+              <p className="text-sm">{getNotificationMessage(notification)}</p>
             </Link>
           ))
         ) : (
-          <p>No new notifications.</p>
+          <p className="py-2 px-4 text-neutral-600 dark:text-neutral-400 text-sm">No new notifications.</p>
         )}
       </div>
     </div>

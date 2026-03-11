@@ -43,7 +43,12 @@ function FeedPage(): React.ReactElement {
 
   return (
     <>
-      <h1 className="text-3xl font-bold mb-4">Feed</h1>
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50 mb-2">Feed</h1>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          Browse community tier list templates. Pick one and rank movies to share your taste.
+        </p>
+      </header>
 
       {isError && <ErrorMessage message={error.message} />}
 

@@ -26,11 +26,12 @@ function MessagesPage(): React.ReactElement {
   }, [conversations, targetId, navigate]);
 
   return (
-    <div className="flex h-[calc(100vh-200px)]">
+    <div className="flex flex-col sm:flex-row h-[calc(100vh-200px)] min-h-0">
       {/* Sidebar */}
-      <div className="w-1/3 border-r border-neutral-200 dark:border-neutral-800">
-        <div className="p-4 border-b border-neutral-200 dark:border-neutral-800">
-          <h2 className="text-xl font-semibold">Conversations</h2>
+      <div className="w-full sm:w-1/3 border-r border-neutral-200 dark:border-neutral-800 flex flex-col min-w-0">
+        <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0">
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Conversations</h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">Select a conversation or start a new one from Kin.</p>
         </div>
         {/* Conversation List */}
         <div className="overflow-y-auto">
@@ -49,9 +50,9 @@ function MessagesPage(): React.ReactElement {
           {conversations?.map((user) => (
             <Link to={`/messages/${user.id}`} key={user.id}>
               <div
-                className={`p-4 cursor-pointer ${
+                className={`p-4 cursor-pointer text-neutral-900 dark:text-neutral-100 ${
                   targetId && parseInt(targetId, 10) === user.id
-                    ? "bg-purple-100 dark:bg-purple-900"
+                    ? "bg-purple-100 dark:bg-purple-900/50"
                     : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 }`}
               >
@@ -63,7 +64,7 @@ function MessagesPage(): React.ReactElement {
       </div>
 
       {/* Main Chat Area */}
-      <div className="w-2/3 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <Outlet context={{ conversations }} />
       </div>
     </div>

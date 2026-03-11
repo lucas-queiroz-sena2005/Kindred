@@ -6,9 +6,14 @@ function AccountPage(): React.ReactElement {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-neutral-800 dark:text-neutral-200">
-        My Account
-      </h1>
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-neutral-800 dark:text-neutral-200 mb-2">
+          My Account
+        </h1>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          Manage your account and sign out.
+        </p>
+      </header>
       <div className="bg-white dark:bg-neutral-800 shadow-md rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 text-neutral-700 dark:text-neutral-300">
           Settings

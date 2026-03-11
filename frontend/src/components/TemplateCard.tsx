@@ -22,6 +22,9 @@ export function TemplateCard(templateData: TierListSummary): React.ReactElement 
     >
       <TemplateCardSkeleton>
         <div className="p-4 flex-grow">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-0.5">
+            {isRanked ? "Your ranking" : "Community template"}
+          </p>
           <h3 className="font-bold text-neutral-800 dark:text-neutral-100 line-clamp-2">
             {title}
           </h3>

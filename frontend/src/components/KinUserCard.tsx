@@ -59,26 +59,26 @@ export function KinUserCard({
 
   return (
     <div
-      className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 hover:shadow-md transition-shadow h-fit cursor-pointer"
+      className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-shadow h-fit cursor-pointer"
       onClick={onToggle}
     >
       <article className="flex justify-between items-start gap-3 min-w-0">
         <div className="flex-grow min-w-0">
-          <h3 className="font-bold text-lg text-neutral-800">
+          <h3 className="font-bold text-lg text-neutral-800 dark:text-neutral-100">
             {user.username}
           </h3>
-          <p className="text-sm text-neutral-500">Compatible User</p>
-          <div className="mt-4 pt-4 border-t border-neutral-100">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Compatible User</p>
+          <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-700">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleDetailsClick}
-                className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300 z-10 relative"
+                className="px-3 py-1 bg-gray-200 dark:bg-neutral-600 text-gray-800 dark:text-neutral-100 rounded text-sm hover:bg-gray-300 dark:hover:bg-neutral-500 z-10 relative"
               >
                 {isOpen ? "Close" : "Details"}
               </button>
               <button
                 onClick={handleButtonClick}
-                className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300 z-10 relative"
+                className="px-3 py-1 bg-gray-200 dark:bg-neutral-600 text-gray-800 dark:text-neutral-100 rounded text-sm hover:bg-gray-300 dark:hover:bg-neutral-500 z-10 relative"
               >
                 {isMessageOpen ? "Cancel" : "Quick Message"}
               </button>
@@ -95,18 +95,18 @@ export function KinUserCard({
           </div>
         </div>
         <div className="text-right flex-shrink-0 min-w-[4.5rem]">
-          <span className="block text-2xl font-bold text-purple-600">
+          <span className="block text-2xl font-bold text-purple-600 dark:text-purple-400">
             {percentage}%
           </span>
-          <span className="text-xs text-neutral-400 uppercase tracking-wide">
-            Afinidade
+          <span className="text-xs text-neutral-400 dark:text-neutral-500 uppercase tracking-wide">
+            Affinity
           </span>
         </div>
       </article>
 
       {isOpen && (
-        <div className="mt-4 pt-4 border-t border-neutral-200 animate-in fade-in slide-in-from-top-1">
-          {isLoading && <p className="text-center">Loading details...</p>}
+        <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700 animate-in fade-in slide-in-from-top-1">
+          {isLoading && <p className="text-center text-neutral-600 dark:text-neutral-400">Loading details...</p>}
           {isError && (
             <ErrorMessage message="Error while loading comparison details." />
           )}
@@ -114,10 +114,10 @@ export function KinUserCard({
             <div className="flex justify-around text-center">
               {Object.entries(fixedDetails).map(([label, score]) => (
                 <div key={label}>
-                  <span className="block text-xl font-bold text-purple-600">
+                  <span className="block text-xl font-bold text-purple-600 dark:text-purple-400">
                     {score}%
                   </span>
-                  <span className="text-xs text-neutral-500 uppercase">
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400 uppercase">
                     {label}
                   </span>
                 </div>

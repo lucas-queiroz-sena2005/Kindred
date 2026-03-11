@@ -113,16 +113,16 @@ function KinPage(): React.ReactElement {
   return (
     <>
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-900">My Kin</h1>
-        <p className="text-neutral-600 mt-2">
-          Pessoas que compartilham o mesmo "DNA cinematográfico" que você.
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">My Kin</h1>
+        <p className="text-neutral-600 dark:text-neutral-400 mt-2">
+          People who share the same cinematic &quot;DNA&quot; as you—discover your movie soulmates.
         </p>
 
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
           {/* Connection Status Filter */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-neutral-600">Show:</span>
-            <div className="flex rounded-md shadow-sm bg-white border border-neutral-200">
+            <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Show:</span>
+            <div className="flex rounded-md shadow-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
               {connectionFilters.map(({ label, value }) => (
                 <button
                   key={value}
@@ -130,8 +130,8 @@ function KinPage(): React.ReactElement {
                   className={`px-3 py-1 text-sm font-medium transition-colors duration-150 rounded-md
                     ${
                       connectionFilter === value
-                        ? "bg-neutral-800 text-white"
-                        : "text-neutral-700 hover:bg-neutral-100"
+                        ? "bg-neutral-800 dark:bg-neutral-600 text-white"
+                        : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                     }
                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500`}
                 >
@@ -145,7 +145,7 @@ function KinPage(): React.ReactElement {
           <div className="flex items-center space-x-2">
             <label
               htmlFor="category-filter"
-              className="text-sm font-medium text-neutral-600"
+              className="text-sm font-medium text-neutral-600 dark:text-neutral-400"
             >
               Based on:
             </label>
@@ -155,7 +155,7 @@ function KinPage(): React.ReactElement {
               onChange={(e) =>
                 setCategoryFilter(e.target.value as CategoryFilter)
               }
-              className="block w-full sm:w-auto pl-3 pr-10 py-2 text-base border-neutral-300 focus:outline-none focus:ring-neutral-500 focus:border-neutral-500 rounded-md shadow-sm"
+              className="block w-full sm:w-auto pl-3 pr-10 py-2 text-base bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-md shadow-sm focus:outline-none focus:ring-neutral-500 focus:border-neutral-500"
             >
               {categoryFilters.map((category) => (
                 <option key={category} value={category}>
@@ -182,9 +182,9 @@ function KinPage(): React.ReactElement {
       )}
 
       {showEmptyState && !isLoading && (
-        <div className="text-center py-12 bg-white rounded-lg border border-neutral-200">
-          <h2 className="text-xl font-semibold mb-2">No Kin found yet</h2>
-          <p className="text-neutral-600">
+        <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <h2 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-neutral-100">No Kin found yet</h2>
+          <p className="text-neutral-600 dark:text-neutral-400">
             No users match the current filters. Try a different combination!
           </p>
         </div>

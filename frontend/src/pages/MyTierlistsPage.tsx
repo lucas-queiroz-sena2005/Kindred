@@ -43,7 +43,12 @@ function MyTierlistPage(): React.ReactElement {
 
   return (
     <>
-      <h1 className="text-3xl font-bold mb-4">My Tierlists</h1>
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50 mb-2">My Tierlists</h1>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          Your ranked tier lists. Open any card to edit your ranking or add more movies.
+        </p>
+      </header>
 
       {isError && <ErrorMessage message={error.message} />}
 
