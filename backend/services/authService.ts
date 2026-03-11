@@ -70,11 +70,9 @@ export async function login(userData: UserData): Promise<RegisteredUser> {
     id: number;
     username: string;
     password_hash: string;
-  }>(
-    `sql
-    SELECT id, username, password_hash FROM users WHERE username = $1`,
-    [username.trim()],
-  );
+  }>(`SELECT id, username, password_hash FROM users WHERE username = $1`, [
+    username.trim(),
+  ]);
 
   if (users.length === 0) {
     throw new UnauthorizedError("Invalid credentials.");
