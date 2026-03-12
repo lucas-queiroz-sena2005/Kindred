@@ -34,7 +34,7 @@ The term "Kin" refers to users with high cosine similarity scores—people whose
 │  └─────────────┘ └─────────────┘ └─────────────┘ └───────────────┘  │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────────────┐│
 │  │ Message     │ │ Connection  │ │ TMDB Sync Job (node-cron)      ││
-│  │ Service     │ │ Service     │ │ Daily at 00:00 UTC             ││
+│  │ Service     │ │ Service     │ │ Interval (SYNC_INTERVAL_MINUTES)│
 │  └─────────────┘ └─────────────┘ └─────────────────────────────────┘│
 └────────────────────────────┬────────────────────────────────────────┘
                              │ PostgreSQL Protocol
@@ -212,12 +212,12 @@ Notifications are polled client-side. Read status is updated atomically when fet
 - Extracts genres, release years, poster paths
 - Builds `vw_movie_features` view for efficient vector calculation
 
-**Daily Sync** (cron job at 00:00 UTC):
+**Scheduled Sync** (cron job, interval in minutes via `SYNC_INTERVAL_MINUTES`, default 1440):
 
-1. Calls `/movie/changes` endpoint to get IDs modified in last 24h
+1. Calls TMDB `/movie/changes` to get IDs modified since last run
 2. Filters to only locally-stored movies
-3. Updates `title`, `poster_path`, `last_sync` for changed records
-4. Refreshes image CDN configuration
+3. Updates `title`, `poster_path`, `updated_at` for changed records
+4. Refreshes TMDB image configuration (stored in `tmdb_config`)
 
 ## Data Model
 
@@ -232,55 +232,71 @@ users
 ├── profile_vector (vector(256))
 └── created_at
 
+tmdb_config
+├── id (1) — singleton row
+├── base_url, secure_base_url, poster_sizes
+└── updated_at
+
+job_sync_log
+├── job_name (pk)
+├── last_run_at, type (status_type), metadata (jsonb)
+└── — used by TMDB sync job
+
+directors
+├── id (pk, TMDB person id)
+└── name
+
+genres
+├── id (pk, TMDB genre id)
+└── name (unique)
+
 movies
 ├── id (serial)
 ├── tmdb_id (unique)
-├── title
-├── poster_path
-├── release_year
-├── decade (computed)
-└── last_sync
+├── title, release_year, director_id (fk)
+├── poster_path, updated_at
+└── decade (generated stored)
+
+movie_genres (junction)
+├── movie_id (fk), genre_id (fk)
+└── PRIMARY KEY (movie_id, genre_id)
 
 tierlist_templates
 ├── id (serial)
-├── title
-└── description
+├── title (unique), description
+└── created_at
 
 template_movies (junction)
-├── template_id (fk)
-└── movie_id (fk)
+├── template_id (fk), movie_id (fk)
+└── PRIMARY KEY (template_id, movie_id)
 
 user_rankings
 ├── id (serial)
-├── user_id (fk)
-├── template_id (fk)
-├── updated_at
+├── user_id (fk), template_id (fk)
+├── created_at, updated_at
 └── UNIQUE(user_id, template_id)
 
 ranked_items
 ├── id (serial)
-├── ranking_id (fk)
-├── movie_id (fk)
+├── ranking_id (fk), movie_id (fk)
 └── tier (0-5, maps to S-F)
 ```
 
 ### Social Tables
 
 ```
+connection_request
+├── sender_id (fk), receiver_id (fk)
+└── created_at, PRIMARY KEY (sender_id, receiver_id)
+
 user_connections
 ├── user_id_a (fk, smaller id)
 ├── user_id_b (fk, larger id)
-└── created_at
-
-connection_request
-├── sender_id (fk)
-├── receiver_id (fk)
-└── created_at
+└── PRIMARY KEY (user_id_a, user_id_b)
 
 user_blocks
-├── blocker_id (fk)
-├── blocked_id (fk)
-└── created_at
+├── blocker_id (fk), blocked_id (fk)
+└── created_at, PRIMARY KEY (blocker_id, blocked_id)
 
 messages
 ├── id (serial)
@@ -346,37 +362,46 @@ notifications
 ```bash
 # Clone and install
 git clone <repo-url>
-cd kindred
+cd Kindred
 
-# Backend setup
+# Backend
 cd backend
-cp .env.example .env  # Configure DATABASE_URL, JWT_SECRET, TMDB_API_KEY
+cp ../.env.example .env   # or create .env with required vars (see below)
 npm install
-npm run db:seed       # Populate database with TMDB data
-npm run dev           # Starts on :3001
+npm run db:seed           # Populate database with TMDB data (needs TMDB_API_KEY)
+npm run dev               # Starts on :3001
 
-# Frontend setup (separate terminal)
+# Frontend (separate terminal)
 cd frontend
 npm install
-npm run dev           # Starts on :5173
+npm run dev               # Starts on :5173; set VITE_API_URL if backend not at same host
 ```
 
 ### Environment Variables
 
-**Backend** (`/backend/.env`):
+**Backend** (e.g. `backend/.env` or project root `.env` when running from backend):
 
-```
-DATABASE_URL=postgresql://user:pass@localhost:5432/kindred
-JWT_SECRET=<random-string>
-JWT_EXPIRY=1h
-TMDB_API_KEY=<tmdb-api-key>
-```
+| Variable                | Purpose                                      |
+| ----------------------- | -------------------------------------------- |
+| `DATABASE_URL`          | PostgreSQL connection string                 |
+| `JWT_SECRET`            | Required; used for signing tokens            |
+| `JWT_EXPIRY`            | Optional; default `1h`                       |
+| `TMDB_API_KEY`          | Required for seed; used by sync job          |
+| `FRONTEND_URL`          | CORS origin; default `http://localhost:5173` |
+| `PORT`                  | Server port; default `3001`                  |
+| `NODE_ENV`              | `development` / `production` / `test`         |
+| `SYNC_INTERVAL_MINUTES` | TMDB sync interval; default `1440` (24h)    |
+
+**Frontend:** `VITE_API_URL` (optional; default `/api`) — base URL for API requests.
+
+**Docker / root `.env.example`:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `JWT_SECRET`, `TMDB_API_KEY`, `VITE_API_URL`, `NODE_ENV`, `FRONTEND_URL`, `SYNC_INTERVAL_MINUTES`.
 
 ### Docker Deployment
 
 ```bash
-# Create .env at project root with:
-# POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, JWT_SECRET
+# Copy .env.example to .env at project root and set:
+# POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, JWT_SECRET, TMDB_API_KEY,
+# VITE_API_URL (e.g. http://localhost/api), FRONTEND_URL, SYNC_INTERVAL_MINUTES
 
 docker compose up -d
 ```
@@ -390,7 +415,8 @@ Services will be available at:
 ## Project Structure
 
 ```
-kindred/
+Kindred/
+├── .env.example                # Env template (Docker + optional local)
 ├── backend/
 │   ├── src/server.ts           # Express app entry
 │   ├── routes/                 # Route definitions
@@ -398,27 +424,31 @@ kindred/
 │   ├── services/               # Business logic
 │   │   ├── vectorService.ts    # Profile vector calculation
 │   │   ├── kinService.ts       # Similarity queries
-│   │   └── jobs/               # Cron job services
+│   │   ├── configService.ts    # TMDB config
+│   │   └── jobs/               # TMDB sync service
+│   ├── jobs/                   # Cron setup (e.g. tmdbSyncJob.ts)
 │   ├── middleware/             # Auth middleware
-│   ├── db/                     # Database connection, seeds
-│   ├── config/                 # Auth config
+│   ├── db/                     # db.ts, database.sql, seed scripts
+│   ├── config/                 # authConfig
 │   ├── errors/                 # Custom error classes
-│   └── types/                  # TypeScript interfaces
+│   ├── utils/                  # tokenUtils, authValidation
+│   ├── types/                  # TypeScript interfaces
+│   └── tests/                  # Unit and integration tests
 ├── frontend/
 │   ├── src/
 │   │   ├── App.tsx             # Route definitions
 │   │   ├── api.ts              # Axios instance, API functions
 │   │   ├── components/         # Shared components
 │   │   ├── pages/              # Route components
-│   │   ├── features/
-│   │   │   └── tierlist/       # Tier list feature module
-│   │   │       ├── components/ # DnD and Tap interfaces
-│   │   │       ├── context/    # Page-level state
-│   │   │       └── util/       # State transformers
+│   │   ├── features/tierlist/  # Tier list feature module
+│   │   │   ├── components/     # DnD and Tap interfaces
+│   │   │   ├── context/        # Page-level state
+│   │   │   └── util/           # State transformers
 │   │   ├── hooks/              # Custom hooks
 │   │   ├── context/            # Global contexts
+│   │   ├── theme/              # ThemeProvider (system dark mode)
 │   │   └── types/              # TypeScript interfaces
-│   └── nginx.conf              # Production proxy config
+│   └── nginx.conf              # Production proxy config (if present)
 └── docker-compose.yml
 ```
 
