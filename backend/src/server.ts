@@ -80,7 +80,7 @@ async function syncSchema(client: any) {
       );
     `);
 
-    if (!tableCheck.rows[0].exists) {
+    if (tableCheck.rows.length < 16 || !tableCheck.rows[0].exists) {
       console.log(
         "📂 [DB] No schema detected. Initializing from database.sql...",
       );
