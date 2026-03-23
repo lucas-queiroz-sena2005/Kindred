@@ -4,14 +4,13 @@ import { useAuth } from "../hooks/useAuth";
 
 const ProtectedRoute: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
-
+  const location = useLocation();
   if (isLoading) {
-    // You can show a loading spinner here while checking auth status
-    return <div>Loading...</div>;
+    return null;
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   return <Outlet />;

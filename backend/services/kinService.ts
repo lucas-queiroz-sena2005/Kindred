@@ -21,9 +21,8 @@ export async function getKinListbyId(
 
   const sortColumn =
     sortBy === "overall"
-      ? `GREATEST(0, (1 - (other.profile_vector <=> tu.profile_vector)))`
-      : `GREATEST(0, (1 - ( ((other.profile_vector::real[])${sliceString})::vector <=> ((tu.profile_vector::real[])${sliceString})::vector )))`;
-
+      ? `((1 - (other.profile_vector <=> tu.profile_vector)) + 1) / 2`
+      : `((1 - ( ((other.profile_vector::real[])${sliceString})::vector <=> ((tu.profile_vector::real[])${sliceString})::vector )) + 1) / 2`;
   const query = `
     WITH TargetUser AS (
         SELECT profile_vector FROM users WHERE id = $1
@@ -33,20 +32,20 @@ export async function getKinListbyId(
       other.username,
       ${sortColumn} AS "similarityScore"
     FROM users AS other
-    JOIN TargetUser AS tu ON true    
+    JOIN TargetUser AS tu ON true
     LEFT JOIN user_connections uc ON
       (uc.user_id_a = $1 AND uc.user_id_b = other.id)
-      OR (uc.user_id_b = $1 AND uc.user_id_a = other.id)      
+      OR (uc.user_id_b = $1 AND uc.user_id_a = other.id)
     WHERE
       other.id != $1
       AND other.profile_vector IS NOT NULL
-        
+
       ${connectOnly ? "AND uc.user_id_a IS NOT NULL" : ""}
       ${unconnectedOnly ? "AND uc.user_id_a IS NULL" : ""}
-      
+
     ORDER BY
         "similarityScore" DESC
-    
+
     LIMIT $2 OFFSET $3
   `;
 
@@ -61,14 +60,14 @@ export async function compareKin(
   const segmentScoreQueries = Object.entries(FEATURE_CONFIG)
     .map(
       ([name, config]) =>
-        `GREATEST(0, (1 - ( ((u1.profile_vector::real[])${config.slice})::vector <=> ((u2.profile_vector::real[])${config.slice})::vector ))) AS "${name}Score"`,
+        `(( (1 - ( ((u1.profile_vector::real[])${config.slice})::vector <=> ((u2.profile_vector::real[])${config.slice})::vector )) + 1 ) / 2) AS "${name}Score"`,
     )
     .join(",\n");
 
   const query = `
     SELECT
       -- 1. Overall Score (Total Taste DNA)
-      GREATEST(0, (1 - (u1.profile_vector <=> u2.profile_vector))) AS "overallScore",
+      ((1 - (u1.profile_vector <=> u2.profile_vector)) + 1) / 2 AS "overallScore",
       ${segmentScoreQueries}
 
     FROM users AS u1, users AS u2
