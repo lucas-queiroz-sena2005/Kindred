@@ -26,9 +26,11 @@ export const TmdbConfigProvider: React.FC<{ children: React.ReactNode }> = ({
   const [config, setConfig] = useState<TmdbConfigData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
+    if (authLoading) return;
+
     const fetchConfig = async () => {
       if (!isAuthenticated) {
         setLoading(false);
@@ -37,7 +39,6 @@ export const TmdbConfigProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         setLoading(true);
-        // Cast to our interface to ensure property alignment
         const data = (await api.config.getTmdbConfig()) as TmdbConfigData;
         setConfig(data);
         setError(null);
@@ -50,7 +51,7 @@ export const TmdbConfigProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     fetchConfig();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
   const getImageUrl = (path: string, size: string = "w500"): string => {
     if (!config || !path) return ImagePlaceholder;

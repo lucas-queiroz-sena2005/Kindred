@@ -7,10 +7,7 @@ import type {
   User,
   AuthContextType,
 } from "../types/auth";
-
-export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined,
-);
+import { AuthContext } from "../context/AuthContext";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
