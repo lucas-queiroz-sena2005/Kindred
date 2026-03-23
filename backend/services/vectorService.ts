@@ -101,20 +101,20 @@ export async function recalculateProfileVector(userId: number) {
 
   const client = await pool.connect();
   try {
-    // 1. Fetch all user rankings and their associated features.
+    // Fetch all user rankings and their associated features.
     const allRankings = await getAllUserRankings(client, userId);
 
-    // 2. Aggregate scores and counts for each feature dimension.
+    // Aggregate scores and counts for each feature dimension.
     const { total_score_vector, feature_count_vector } =
       aggregateFeatureScores(allRankings);
 
-    // 3. Calculate the final, dampened profile vector.
+    // Calculate the final, dampened profile vector.
     const new_profile_vector = calculateDampenedVector(
       total_score_vector,
       feature_count_vector,
     );
 
-    // 4. Persist the new vector to the database.
+    // Persist the new vector to the database.
     const vectorString = `[${new_profile_vector.join(",")}]`;
     const updateResult = await client.query(
       `
@@ -122,7 +122,6 @@ export async function recalculateProfileVector(userId: number) {
       [vectorString, userId],
     );
 
-    // Add error handling for cases where the user ID might not exist.
     if (updateResult.rowCount === 0) {
       throw new ApiError(
         `User with ID ${userId} not found for vector update.`,
@@ -138,7 +137,6 @@ export async function recalculateProfileVector(userId: number) {
       `🔴 [VectorService] Failed to recalculate vector for userId: ${userId}`,
       error,
     );
-    // Re-throw the error to be handled by the calling service if necessary.
     throw error;
   } finally {
     client.release();
