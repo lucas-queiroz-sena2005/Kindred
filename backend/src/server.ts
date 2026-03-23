@@ -72,25 +72,21 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 async function syncSchema(client: any) {
   try {
-    const tableCheck = await client.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'users'
-      );
+    const tableCountResult = await client.query(`
+      SELECT count(*) FROM information_schema.tables
+      WHERE table_schema = 'public';
     `);
 
-    if (tableCheck.rows.length < 16 || !tableCheck.rows[0].exists) {
-      console.log(
-        "📂 [DB] No schema detected. Initializing from database.sql...",
-      );
+    const count = parseInt(tableCountResult.rows[0].count);
+
+    if (count < 16) {
+      console.log("📂 [DB] Schema incomplete. Initializing...");
       const sqlPath = path.join(__dirname, "../../db/database.sql");
       const sql = fs.readFileSync(sqlPath, "utf8");
-
       await client.query(sql);
-      console.log("✅ [DB] Schema initialized successfully.");
+      console.log("✅ [DB] Schema initialized.");
     } else {
-      console.log("💎 [DB] Schema verified (tables exist).");
+      console.log("💎 [DB] Schema verified.");
     }
   } catch (err) {
     console.error("❌ [DB] Schema sync failed:", err);

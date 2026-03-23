@@ -24,25 +24,27 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route element={<ProtectedRoute />}>
-                  <Route index element={<FeedPage />} />
-                  <Route path="/tierlists" element={<MyTierlistsPage />} />
-                  <Route path="/kin" element={<KinPage />} />
-                  <Route path="/account" element={<AccountPage />} />
-                  <Route path="/messages" element={<MessagesPage />}>
-                    <Route path=":targetId" element={<Conversation />} />
+          <TmdbConfigProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route element={<ProtectedRoute />}>
+                    <Route index element={<FeedPage />} />
+                    <Route path="/tierlists" element={<MyTierlistsPage />} />
+                    <Route path="/kin" element={<KinPage />} />
+                    <Route path="/account" element={<AccountPage />} />
+                    <Route path="/messages" element={<MessagesPage />}>
+                      <Route path=":targetId" element={<Conversation />} />
+                    </Route>
+                    <Route path="/tierlists/:id" element={<TierListPage />} />
                   </Route>
-                  <Route path="/tierlists/:id" element={<TierListPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Route>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+              </Routes>
+            </BrowserRouter>
+          </TmdbConfigProvider>
         </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>

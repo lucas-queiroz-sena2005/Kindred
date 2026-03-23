@@ -1,52 +1,48 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { api } from '../api';
-import type { TmdbConfig } from '../api';
-import ImagePlaceholder from '../assets/image_placeholder.png'; // Import the placeholder image
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { api } from "../api";
+import { useAuth } from "../hooks/useAuth";
 
-interface TmdbConfigContextType {
-  config: TmdbConfig | null;
-  loading: boolean;
-  error: string | null;
-  getImageUrl: (path: string, size?: string) => string;
+interface TmdbConfig {
+  base_url: string;
+  secure_base_url: string;
+  poster_sizes: string[];
 }
 
-const TmdbConfigContext = createContext<TmdbConfigContextType | undefined>(undefined);
+const TmdbConfigContext = createContext<TmdbConfig | undefined>(undefined);
 
-export const TmdbConfigProvider = ({ children }: { children: ReactNode }) => {
-  const [config, setConfig] = useState<TmdbConfig | null>(null);
+export const TmdbConfigProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [config, setConfig] = useState<TmdbConfig | undefined>(undefined);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchConfig = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        setLoading(true);
-        const response = await api.config.getTmdbConfig();
-        setConfig(response);
-      } catch (err) {
-        setError('Failed to fetch TMDB configuration.');
-        console.error(err);
+        const data = (await api.config.getTmdbConfig()) as TmdbConfig;
+        setConfig(data);
+      } catch (error) {
+        console.error("Failed to fetch TMDB config:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchConfig();
-  }, []);
+  }, [isAuthenticated]);
 
-  const getImageUrl = (path: string, size: string = 'w500'): string => {
-    if (!config || !path) return ImagePlaceholder; // Use the placeholder if no config or path
-    
-    // Choose a poster size. 'w500' is a good default.
-    // You could also implement logic to select the best size.
-    const posterSize = config.poster_sizes.includes(size) ? size : 'original';
-
-    return `${config.secure_base_url}${posterSize}${path}`;
-  };
+  if (loading || !config) {
+    return <>{children}</>;
+  }
 
   return (
-    <TmdbConfigContext.Provider value={{ config, loading, error, getImageUrl }}>
+    <TmdbConfigContext.Provider value={config}>
       {children}
     </TmdbConfigContext.Provider>
   );
@@ -54,8 +50,5 @@ export const TmdbConfigProvider = ({ children }: { children: ReactNode }) => {
 
 export const useTmdbConfig = () => {
   const context = useContext(TmdbConfigContext);
-  if (context === undefined) {
-    throw new Error('useTmdbConfig must be used within a TmdbConfigProvider');
-  }
   return context;
 };

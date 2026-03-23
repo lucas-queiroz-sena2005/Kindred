@@ -8,7 +8,9 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ----------------------------------------------------------
 -- Configuration & Metadata
 -- ----------------------------------------------------------
-CREATE TYPE IF NOT EXISTS status_type AS ENUM ('success', 'running', 'failed');
+
+DROP TYPE IF EXISTS status_type CASCADE;
+CREATE TYPE status_type AS ENUM ('success', 'running', 'failed');
 
 CREATE TABLE IF NOT EXISTS tmdb_config (
     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -71,7 +73,8 @@ CREATE TABLE IF NOT EXISTS user_blocks (
 -- Notifications & Messaging
 -- ----------------------------------------------------------
 
-CREATE TYPE IF NOT EXISTS notification_type AS ENUM ('kin_request', 'kin_accepted', 'new_message');
+DROP TYPE IF EXISTS notification_type CASCADE;
+CREATE TYPE notification_type AS ENUM ('kin_request', 'kin_accepted', 'new_message');
 
 CREATE TABLE IF NOT EXISTS notifications (
     id SERIAL PRIMARY KEY,
@@ -198,7 +201,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE IF NOT EXISTS TRIGGER set_user_rankings_updated_at
+DROP TRIGGER IF EXISTS set_user_rankings_updated_at ON user_rankings;
+CREATE TRIGGER set_user_rankings_updated_at
 BEFORE UPDATE ON user_rankings
 FOR EACH ROW
 EXECUTE FUNCTION trg_user_rankings_update_timestamp();
