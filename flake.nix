@@ -16,6 +16,8 @@
           nodePackages.typescript-language-server
           postgresql_15 # Matched to your stack
           nodePackages.npm
+          railway
+          nixd
         ];
 
         shellHook = ''

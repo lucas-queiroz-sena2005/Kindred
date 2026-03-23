@@ -9,7 +9,7 @@ import type {
 } from "../types/auth";
 
 export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -23,6 +23,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const authData = await api.auth.checkStatus();
         if (authData && authData.user) {
           setUser(authData.user);
+        } else {
+          setUser(null);
         }
       } catch (error) {
         setUser(null);
@@ -53,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleRegister(
-    credentials: RegisterCredentials
+    credentials: RegisterCredentials,
   ): Promise<any> {
     try {
       return await api.auth.register(credentials);
@@ -71,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout: handleLogout,
       register: handleRegister,
     }),
-    [user, isLoading]
+    [user, isLoading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

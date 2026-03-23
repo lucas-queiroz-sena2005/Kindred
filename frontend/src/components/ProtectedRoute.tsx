@@ -1,20 +1,23 @@
 import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
-import { useLocation } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { TmdbConfigProvider } from "../context/TmdbConfigProvider";
 
 const ProtectedRoute: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-  if (isLoading) {
-    return null;
-  }
+
+  if (isLoading) return null;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  return <Outlet />;
+  return (
+    <TmdbConfigProvider>
+      <Outlet />
+    </TmdbConfigProvider>
+  );
 };
 
 export default ProtectedRoute;
