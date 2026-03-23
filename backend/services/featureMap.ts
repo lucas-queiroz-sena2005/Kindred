@@ -3,12 +3,12 @@ export const k_DAMPENING_FACTOR = 4;
 
 // Tier weight map 'tier' (0-5)
 export const TIER_WEIGHTS = {
-  0: 3, // S
-  1: 2, // A
-  2: 1, // B
-  3: 0, // C
-  4: -1, // D
-  5: -2, // F
+  0: 5, // S
+  1: 4, // A
+  2: 3, // B
+  3: 2, // C
+  4: 1, // D
+  5: 0, // F
 };
 
 export type FeatureName = "genre" | "decade" | "director";
