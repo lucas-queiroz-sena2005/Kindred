@@ -92,13 +92,19 @@ Where `k=3` (dampening factor). This shrinks scores toward zero when sample size
 
 ### Read Path (Similarity Search)
 
-The Kin page retrieves compatible users via:
+Cosine distance from pgvector’s `<=>` is in **[0, 2]** (0 = identical direction, 1 = orthogonal, 2 = opposite). The Kin service maps that to a **[0, 1] affinity** where **0.5 = neutral (50%)**, **1 = 100% match**, **0 = 0% (opposite)**:
+
+```text
+affinity = ((1 - cosine_distance) + 1) / 2
+```
+
+List query (simplified):
 
 ```sql
 SELECT
   other.id,
   other.username,
-  GREATEST(0, (1 - (other.profile_vector <=> current_user.profile_vector))) AS similarity_score
+  ((1 - (other.profile_vector <=> current_user.profile_vector)) + 1) / 2 AS similarity_score
 FROM users other
 WHERE other.id != $current_user_id
   AND other.profile_vector IS NOT NULL
@@ -106,17 +112,16 @@ ORDER BY similarity_score DESC
 LIMIT $limit OFFSET $offset
 ```
 
-The `<=>` operator computes cosine distance. Subtracting from 1 converts to similarity (0–1 range).
+**Note:** Using only `GREATEST(0, 1 - distance)` is wrong for this operator: for distances above 1 it clamps everything to **0**, which made the UI look like “0%” for many pairs.
 
 ### Segment-Based Comparison
 
-Users can filter by feature category:
+Users can filter by feature category. Slices use **1-based** PostgreSQL subscripts (JS feature index `i` → SQL subscript `i + 1`):
 
 ```sql
--- Genre similarity only (indices 0-18)
-((other.profile_vector::real[])[0:18])::vector
-  <=>
-((current.profile_vector::real[])[0:18])::vector
+-- Genre only (JS dims 0–18 → SQL [1:19])
+((other.profile_vector::real[])[1:19])::vector <=>
+((current.profile_vector::real[])[1:19])::vector
 ```
 
 ## Technology Stack

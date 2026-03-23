@@ -15,9 +15,7 @@ export async function seedUsers(client: PoolClient): Promise<number[]> {
     usersToSeed.map(async (user) => {
       const hash = await bcrypt.hash(user.password, 10);
       console.log(`Seeded ${user.username} (pw: ${user.password})`);
-      // Generate a random 256-dimension vector for the profile
-      const profileVector = Array.from({ length: 256 }, () => Math.random());
-      return [user.username, user.email, hash, `[${profileVector.join(",")}]`];
+      return [user.username, user.email, hash, null];
     }),
   );
 

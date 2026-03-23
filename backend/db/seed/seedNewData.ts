@@ -121,15 +121,8 @@ async function seedUsersAndGetIds(
   const userValues = await Promise.all(
     users.map(async (user) => {
       const hashedPassword = await bcrypt.hash("password123", 10); // Hash the default password
-      // Generate a random 256-dimension vector for the profile
-      const profileVector = Array.from({ length: 256 }, () => Math.random());
-      return [
-        user.username,
-        user.email,
-        hashedPassword,
-        `[${profileVector.join(",")}]`,
-        user.id,
-      ];
+      // Vectors are computed when rankings are seeded (recalculateProfileVector).
+      return [user.username, user.email, hashedPassword, null, user.id];
     }),
   );
 

@@ -29,13 +29,13 @@ export function KinUserCard({
 
   const overallScore = ((details?.overallScore ?? 0) * 100).toFixed(1);
 
+  const segmentLabel = (key: string) =>
+    key.charAt(0).toUpperCase() + key.slice(1);
+
   const dynamicSegments = details?.segments
     ? Object.entries(details.segments).reduce(
         (acc, [key, val]) => {
-          const label =
-            key.replace("Score", "").charAt(0).toUpperCase() +
-            key.replace("Score", "").slice(1);
-          acc[label] = ((val ?? 0) * 100).toFixed(1);
+          acc[segmentLabel(key)] = ((val ?? 0) * 100).toFixed(1);
           return acc;
         },
         {} as Record<string, string>,

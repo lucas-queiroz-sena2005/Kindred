@@ -13,10 +13,14 @@ export const TIER_WEIGHTS = {
 
 export type FeatureName = "genre" | "decade" | "director";
 
+/**
+ * Slices for `(profile_vector::real[])[lower:upper]::vector`.
+ * PostgreSQL arrays are 1-based; JS feature indices 0..255 map to subscripts 1..256.
+ */
 export const FEATURE_CONFIG: Record<FeatureName, { slice: string }> = {
-  genre: { slice: "[0:18]" },
-  decade: { slice: "[19:29]" },
-  director: { slice: "[30:255]" },
+  genre: { slice: "[1:19]" }, // JS 0–18 → 19 dims
+  decade: { slice: "[20:30]" }, // JS 19–29 → 11 dims
+  director: { slice: "[31:256]" }, // JS 30–255 → 226 dims
 };
 
 export const FEATURE_NAMES = Object.keys(FEATURE_CONFIG) as FeatureName[];

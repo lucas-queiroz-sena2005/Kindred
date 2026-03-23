@@ -14,11 +14,8 @@ export interface ConnectionStatus {
   am_i_blocker?: boolean;
 }
 
+/** Matches `kinService.compareKin` JSON (`segments` keys are feature names, not `*Score`). */
 export interface CompareDetails {
   overallScore: number;
-  segments: {
-    genreScore: number;
-    decadeScore: number;
-    directorScore: number;
-  };
+  segments: Record<"genre" | "decade" | "director", number>;
 }

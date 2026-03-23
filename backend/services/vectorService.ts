@@ -104,6 +104,20 @@ export async function recalculateProfileVector(userId: number) {
     // Fetch all user rankings and their associated features.
     const allRankings = await getAllUserRankings(client, userId);
 
+    if (allRankings.length === 0) {
+      const cleared = await client.query(
+        `UPDATE users SET profile_vector = NULL WHERE id = $1`,
+        [userId],
+      );
+      if (cleared.rowCount === 0) {
+        throw new ApiError(
+          `User with ID ${userId} not found for vector update.`,
+          404,
+        );
+      }
+      return;
+    }
+
     // Aggregate scores and counts for each feature dimension.
     const { total_score_vector, feature_count_vector } =
       aggregateFeatureScores(allRankings);
@@ -113,6 +127,21 @@ export async function recalculateProfileVector(userId: number) {
       total_score_vector,
       feature_count_vector,
     );
+
+    const isDegenerate = new_profile_vector.every((v) => v === 0);
+    if (isDegenerate) {
+      const cleared = await client.query(
+        `UPDATE users SET profile_vector = NULL WHERE id = $1`,
+        [userId],
+      );
+      if (cleared.rowCount === 0) {
+        throw new ApiError(
+          `User with ID ${userId} not found for vector update.`,
+          404,
+        );
+      }
+      return;
+    }
 
     // Persist the new vector to the database.
     const vectorString = `[${new_profile_vector.join(",")}]`;
