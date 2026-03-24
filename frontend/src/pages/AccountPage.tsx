@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 function AccountPage(): React.ReactElement {
   const { logout } = useAuth();

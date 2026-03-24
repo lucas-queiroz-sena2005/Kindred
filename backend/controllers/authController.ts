@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import * as authService from "../services/authService.js";
-import { createToken, setTokenCookie } from "../utils/tokenUtils.js";
+import {
+  createToken,
+  setTokenCookie,
+  clearTokenCookie,
+} from "../utils/tokenUtils.js";
 import { ApiError } from "../errors/customErrors.js";
 import { authConfig } from "../config/authConfig.js";
 
@@ -53,6 +57,6 @@ export async function loginUser(
 }
 
 export async function logoutUser(req: Request, res: Response) {
-  res.clearCookie("token");
+  clearTokenCookie(res);
   res.sendStatus(200);
 }

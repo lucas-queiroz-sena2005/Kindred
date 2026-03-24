@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
-import type { Movie } from "../../../types/tierlist";
+import type { Movie } from "@/types/tierlist";
 
 export interface TierListPageContextType {
   selectedMovie: Movie | null;

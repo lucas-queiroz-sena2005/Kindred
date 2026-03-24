@@ -1,18 +1,41 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api";
-import type { ConversationUser, Message } from "../types/messages";
-import { useAuth } from "../hooks/useAuth";
-import ConnectionStatusButton from "./ConnectionStatusButton";
+import { api } from "@/api";
+import type { ConversationUser, Message } from "@/types/messages";
+import { useAuth } from "@/hooks/useAuth";
+import ConnectionStatusButton from "@/features/connections/ConnectionStatusButton";
 import { useParams, useOutletContext, useLocation } from "react-router-dom";
 
 interface OutletContextType {
   conversations: ConversationUser[] | undefined;
+  openConversationList?: () => void;
+}
+
+function numericId(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function messageSenderId(msg: Message & { senderId?: number }): number | null {
+  const raw =
+    msg.sender_id ??
+    (typeof msg.senderId === "number" ? msg.senderId : undefined);
+  return numericId(raw);
+}
+
+function isSentByCurrentUser(
+  msg: Message & { senderId?: number },
+  currentUserId: unknown,
+): boolean {
+  const self = numericId(currentUserId);
+  const sender = messageSenderId(msg);
+  return self !== null && sender !== null && self === sender;
 }
 
 function Conversation(): React.ReactElement {
   const { targetId } = useParams<{ targetId: string }>();
-  const { conversations } = useOutletContext<OutletContextType>();
+  const { conversations, openConversationList } =
+    useOutletContext<OutletContextType>();
   const { user: currentUser, isLoading: isAuthLoading } = useAuth();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
@@ -66,12 +89,24 @@ function Conversation(): React.ReactElement {
     );
   }
 
-  const isSent = (msg: Message) => typeof currentUser?.id === "number" && msg.sender_id === currentUser.id;
-
   return (
     <>
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-2 flex-shrink-0">
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{user?.username ?? "…"}</h2>
+      <div className="flex flex-shrink-0 items-center gap-2 border-b border-neutral-200 p-4 dark:border-neutral-800">
+        {openConversationList && (
+          <button
+            type="button"
+            onClick={openConversationList}
+            className="sm:hidden rounded-lg p-2 text-neutral-600 -ml-1 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+            aria-label="Open conversations list"
+          >
+            <span className="text-lg leading-none" aria-hidden>
+              ☰
+            </span>
+          </button>
+        )}
+        <h2 className="min-w-0 flex-1 truncate text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+          {user?.username ?? "…"}
+        </h2>
         {user?.id != null && <ConnectionStatusButton targetId={user.id} />}
       </div>
 
@@ -91,7 +126,7 @@ function Conversation(): React.ReactElement {
         ) : (
           <div className="space-y-3">
             {messages.map((msg) => {
-              const sent = isSent(msg);
+              const sent = isSentByCurrentUser(msg, currentUser?.id);
               return (
                 <div
                   key={msg.id}

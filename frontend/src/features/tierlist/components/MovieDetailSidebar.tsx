@@ -1,6 +1,6 @@
 import React from 'react';
-import { useTierListPage } from '../context/TierListPageProvider';
-import { useTmdbConfig } from '../../../context/TmdbConfigProvider';
+import { useTierListPage } from "../context/TierListPageProvider";
+import { useTmdbConfig } from "@/shared/context/TmdbConfigProvider";
 
 export const MovieDetailSidebar: React.FC = () => {
   const { selectedMovie, setSelectedMovie } = useTierListPage();

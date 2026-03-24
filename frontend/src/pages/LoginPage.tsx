@@ -1,13 +1,26 @@
+import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import AuthForm from "../components/AuthForm";
-import type { FormField } from "../components/AuthForm";
-import { useAuth } from "../hooks/useAuth";
+import AuthForm from "@/features/auth/AuthForm";
+import type { FormField } from "@/features/auth/AuthForm";
+import { useAuth } from "@/hooks/useAuth";
+
+function resolvePostLoginPath(from: unknown): string {
+  if (typeof from === "string" && from.startsWith("/")) {
+    return from;
+  }
+  if (from && typeof from === "object" && "pathname" in from) {
+    const loc = from as { pathname?: string; search?: string; hash?: string };
+    const path = `${loc.pathname ?? ""}${loc.search ?? ""}${loc.hash ?? ""}`;
+    return path.startsWith("/") ? path : "/";
+  }
+  return "/";
+}
 
 function LoginPage(): React.ReactElement {
   const location = useLocation();
   const navigate = useNavigate();
   const { login } = useAuth();
-  const from = location.state?.from || "/";
+  const from = resolvePostLoginPath(location.state?.from);
 
   const loginFields: FormField[] = [
     {
@@ -25,7 +38,6 @@ function LoginPage(): React.ReactElement {
   };
 
   function handleLoginSuccess() {
-    console.log(`Login successful!`);
     navigate(from, { replace: true });
   }
 

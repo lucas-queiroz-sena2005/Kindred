@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import TierlistDnd from "./DndTierlist/TierlistDnd";
 import TierlistTap from "./TapTierlist/TierlistTap";
 import { useNavigate } from "react-router-dom";
-import type { TierState, TierListData, Movie } from "../../../types/tierlist";
-import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import type { TierState, TierListData, Movie } from "@/types/tierlist";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { transformToTierState, transformToTierData } from "../util/tierlist-transformer";
-import { api } from "../../../api";
+import { api } from "@/api";
 import { useTierListPage } from "../context/TierListPageProvider";
 
 type InteractionMode = "auto" | "drag" | "tap";

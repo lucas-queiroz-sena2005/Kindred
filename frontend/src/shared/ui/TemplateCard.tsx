@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import type { TierListSummary } from "../types/tierlist";
+import type { TierListSummary } from "@/types/tierlist";
 import { TemplateCardSkeleton } from "./TemplateCardSkeleton";
 
 export function TemplateCard(templateData: TierListSummary): React.ReactElement {

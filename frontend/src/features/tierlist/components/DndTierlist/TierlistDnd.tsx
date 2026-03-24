@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
-import type { TierState, Movie } from "../../../../types/tierlist";
+import type { TierState, Movie } from "@/types/tierlist";
 import { arrayMove, arrayTransfer } from "../../util/helpersDnd";
 import TierDnd from "./TierDnd";
 import { TIER_ORDER } from "../../constants/tier-constants";

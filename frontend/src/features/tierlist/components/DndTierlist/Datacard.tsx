@@ -1,8 +1,8 @@
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { Movie } from "../../../../types/tierlist";
-import { useTmdbConfig } from "../../../../context/TmdbConfigProvider";
-import ImagePlaceholder from "../../../../assets/image_placeholder.png"; // Import the placeholder image
+import type { Movie } from "@/types/tierlist";
+import { useTmdbConfig } from "@/shared/context/TmdbConfigProvider";
+import ImagePlaceholder from "@/assets/image_placeholder.png";
 
 interface DataCardProps {
   item: Movie;

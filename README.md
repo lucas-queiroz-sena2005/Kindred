@@ -2,6 +2,8 @@
 
 Full-stack web application that matches users based on cinematic preferences using vector similarity search. Users rank films in tier lists; the system extracts feature vectors from these rankings and computes taste compatibility via cosine similarity on PostgreSQL with the `pgvector` extension.
 
+**Live demo:** [kindred.up.railway.app](https://kindred.up.railway.app)
+
 ## System Overview
 
 Kindred operates on a simple premise: users complete tier lists (S through F rankings) for curated movie collections. Each ranking generates a 256-dimensional profile vector encoding preferences across genres, decades, and directors. The system then finds other users with similar vectors using approximate nearest neighbor search.
@@ -86,7 +88,7 @@ When a user saves a tier list ranking:
 affinity[i] = total_score[i] / (k + count[i])
 ```
 
-Where `k=3` (dampening factor). This shrinks scores toward zero when sample size is small.
+Where `k=4` (dampening factor, see `k_DAMPENING_FACTOR` in `backend/services/featureMap.ts`). This shrinks scores toward zero when sample size is small.
 
 5. **Persist** the 256-dimension vector to `users.profile_vector`
 
@@ -123,6 +125,8 @@ Users can filter by feature category. Slices use **1-based** PostgreSQL subscrip
 ((other.profile_vector::real[])[1:19])::vector <=>
 ((current.profile_vector::real[])[1:19])::vector
 ```
+
+The Kin cards show **five qualitative labels** derived only on the client from the numeric affinity (e.g. “Opposite reels” … “Same marquee”); see `frontend/src/utils/kinClassification.ts`.
 
 ## Technology Stack
 
@@ -177,10 +181,26 @@ Users can override this with manual mode selection.
 
 ### Authentication
 
-- JWT tokens stored in `httpOnly` cookies (prevents XSS token theft)
-- Token expiry configurable via `JWT_EXPIRY` env var (default: 1h)
-- Cookie max age: 72 hours
-- Password hashing: bcrypt with 10 salt rounds
+- JWT stored in an `httpOnly` cookie named `token` (reduces XSS token theft).
+- Token expiry: `JWT_EXPIRY` (default `1h`); cookie lifetime: `COOKIE_MAX_AGE` in `authConfig` (72h).
+- Password hashing: bcrypt (`SALT_ROUNDS` 10 in `authService`).
+
+**Session cookie policy** (`backend/utils/tokenUtils.ts`):
+
+- **Default (same-site / typical dev):** `SameSite=Lax`, `Secure` only when `NODE_ENV=production`. This works for a Vite dev server and API on different **ports** of `localhost` (still the same site for cookies). Using `SameSite=None` without `Secure` in dev caused browsers to **drop** the cookie, so `/user/me` failed while the login JSON body still returned a user—confusing UI state.
+- **True cross-site SPA + API** (different registrable domains, HTTPS): set backend env `CROSS_SITE_COOKIES=true` → `SameSite=None; Secure`. Documented in `.env.example`.
+
+**API responses:** `POST /api/auth/login` and `POST /api/auth/register` return `{ user: { id, username }, token }`. The frontend must use **`response.data.user`** for context state (not the whole `data` object). New accounts keep `profile_vector` **NULL** until the first tier list save; registration does not write an all-zero vector.
+
+**`/api/user/me`:** If the JWT `id` has no matching row (e.g. DB reset), the API responds with **401** and a session-invalid message so clients treat it like a logged-out session (previously **404** “User not found”, which was easy to misread as a generic Axios error).
+
+**Frontend shell:** Do not wrap the app in providers that call `useAuth()` *above* `AuthProvider` (see `frontend/src/main.tsx`). `TmdbConfigProvider` belongs **inside** `AuthProvider`.
+
+**Redirects:** After a protected redirect to login, `state.from` is a **path string** (`pathname` + `search` + `hash`), not a full `Location` object, so post-login navigation stays reliable.
+
+### Direct messages
+
+Conversation bubbles treat a row as “sent” when **`Number(sender_id) === Number(currentUser.id)`**. Strict `===` between a string id (e.g. from some JWT payloads) and a numeric `sender_id` from the API previously marked every bubble as received.
 
 ### Connection System
 
@@ -373,14 +393,27 @@ cd Kindred
 cd backend
 cp ../.env.example .env   # or create .env with required vars (see below)
 npm install
-npm run db:seed           # Populate database with TMDB data (needs TMDB_API_KEY)
-npm run dev               # Starts on :3001
+npm run build             # Required before db:seed / db:clean (dist/)
+npm run db:seed           # Full seed: TMDB + templates + demo users (needs TMDB_API_KEY)
+npm run dev               # Starts on :3001 (or PORT from .env)
+```
 
+To drop **only** accounts and activity but keep movie catalog and tierlist templates, after `npm run build`: `npm run db:clean` (see [Database scripts](#database-scripts)).
+
+```bash
 # Frontend (separate terminal)
 cd frontend
 npm install
 npm run dev               # Starts on :5173; set VITE_API_URL if backend not at same host
 ```
+
+### Database scripts
+
+| Script | Command | What it does |
+| ------ | ------- | ------------ |
+| **Seed** | `npm run db:seed` | Full dataset via `db/seed.ts` (uses `seed/clear.ts` first — wipes **including** templates/movies, then repopulates). Requires `TMDB_API_KEY`. |
+| **Clean** | `npm run db:clean` | `db/clean.ts` — removes **users** and all dependent rows (rankings, messages, notifications, connections). **Keeps** movies, directors, genres, `tierlist_templates`, `template_movies`, `tmdb_config`. Run after `npm run build`. |
+| **Dev (no build)** | `npx tsx db/clean.ts` | Same as `db:clean` using TypeScript directly (needs `tsx` / dev install). |
 
 ### Environment Variables
 
@@ -393,13 +426,31 @@ npm run dev               # Starts on :5173; set VITE_API_URL if backend not at 
 | `JWT_EXPIRY`            | Optional; default `1h`                       |
 | `TMDB_API_KEY`          | Required for seed; used by sync job          |
 | `FRONTEND_URL`          | CORS origin; default `http://localhost:5173` |
+| `CROSS_SITE_COOKIES`    | Set `true` only if SPA and API are on different sites (HTTPS); see Authentication in Key Features |
 | `PORT`                  | Server port; default `3001`                  |
 | `NODE_ENV`              | `development` / `production` / `test`         |
 | `SYNC_INTERVAL_MINUTES` | TMDB sync interval; default `1440` (24h)    |
 
 **Frontend:** `VITE_API_URL` (optional; default `/api`) — base URL for API requests.
 
-**Docker / root `.env.example`:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `JWT_SECRET`, `TMDB_API_KEY`, `VITE_API_URL`, `NODE_ENV`, `FRONTEND_URL`, `SYNC_INTERVAL_MINUTES`.
+**Docker / root `.env.example`:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `JWT_SECRET`, `TMDB_API_KEY`, `VITE_API_URL`, `NODE_ENV`, `FRONTEND_URL`, `SYNC_INTERVAL_MINUTES`, optional `CROSS_SITE_COOKIES`.
+
+### Hosted deployment (e.g. Railway, Fly.io, Render)
+
+The app is **not** tied to a single host. Any platform that provides:
+
+- A **Node** service for the backend with `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` (your SPA origin), `PORT` (often injected by the host), and optional `TMDB_API_KEY` / `SYNC_INTERVAL_MINUTES`.
+- A **PostgreSQL** database with the `vector` extension (Railway Postgres templates often work; run `database.sql` / migrations as you do locally).
+- A **static** or **Node** frontend with `VITE_API_URL` pointing at the public API base (e.g. `https://api.yourapp.com/api`).
+
+Example public UI: [kindred.up.railway.app](https://kindred.up.railway.app) — configure the same env semantics there or in Docker; no Railway-specific code paths are required.
+
+**One-off DB clean on a host** (after deploy artifacts exist):
+
+```bash
+# From backend service shell / release command, with DATABASE_URL set:
+npm run build && npm run db:clean
+```
 
 ### Docker Deployment
 
@@ -409,6 +460,12 @@ npm run dev               # Starts on :5173; set VITE_API_URL if backend not at 
 # VITE_API_URL (e.g. http://localhost/api), FRONTEND_URL, SYNC_INTERVAL_MINUTES
 
 docker compose up -d
+```
+
+Optional — wipe user data only (keeps catalog + templates), from host with the backend image built:
+
+```bash
+docker compose exec backend node dist/db/clean.js
 ```
 
 Services will be available at:
@@ -433,7 +490,7 @@ Kindred/
 │   │   └── jobs/               # TMDB sync service
 │   ├── jobs/                   # Cron setup (e.g. tmdbSyncJob.ts)
 │   ├── middleware/             # Auth middleware
-│   ├── db/                     # db.ts, database.sql, seed scripts
+│   ├── db/                     # db.ts, database.sql, seed.ts, clean.ts
 │   ├── config/                 # authConfig
 │   ├── errors/                 # Custom error classes
 │   ├── utils/                  # tokenUtils, authValidation
@@ -441,19 +498,25 @@ Kindred/
 │   └── tests/                  # Unit and integration tests
 ├── frontend/
 │   ├── src/
-│   │   ├── App.tsx             # Route definitions
-│   │   ├── api.ts              # Axios instance, API functions
-│   │   ├── components/         # Shared components
-│   │   ├── pages/              # Route components
-│   │   ├── features/tierlist/  # Tier list feature module
-│   │   │   ├── components/     # DnD and Tap interfaces
-│   │   │   ├── context/        # Page-level state
-│   │   │   └── util/           # State transformers
-│   │   ├── hooks/              # Custom hooks
-│   │   ├── context/            # Global contexts
-│   │   ├── theme/              # ThemeProvider (system dark mode)
-│   │   └── types/              # TypeScript interfaces
-│   └── nginx.conf              # Production proxy config (if present)
+│   │   ├── App.tsx
+│   │   ├── api.ts
+│   │   ├── layout/             # Layout, Topbar, Navbar, Footer
+│   │   ├── pages/
+│   │   ├── features/
+│   │   │   ├── auth/           # AuthProvider, AuthForm, ProtectedRoute, AuthContext
+│   │   │   ├── kin/            # Kin cards, affinity labels
+│   │   │   ├── messages/       # Conversation, KinMessaging, skeletons
+│   │   │   ├── notifications/  # NotificationDropdown
+│   │   │   ├── connections/    # ConnectionStatusButton
+│   │   │   └── tierlist/       # DnD/Tap tier list module
+│   │   ├── shared/
+│   │   │   ├── context/        # TmdbConfigProvider
+│   │   │   ├── lib/            # cn(), tw (Tailwind presets)
+│   │   │   └── ui/             # ErrorMessage, TemplateCard, skeletons
+│   │   ├── hooks/
+│   │   ├── theme/
+│   │   └── types/
+│   └── nginx.conf              # if present
 └── docker-compose.yml
 ```
 

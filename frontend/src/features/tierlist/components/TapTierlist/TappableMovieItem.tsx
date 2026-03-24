@@ -1,6 +1,6 @@
 import React from "react";
-import type { Movie } from "../../../../types/tierlist";
-import { useTmdbConfig } from "../../../../context/TmdbConfigProvider";
+import type { Movie } from "@/types/tierlist";
+import { useTmdbConfig } from "@/shared/context/TmdbConfigProvider";
 
 interface TappableMovieItemProps {
   movie: Movie;

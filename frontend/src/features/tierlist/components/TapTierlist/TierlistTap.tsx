@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { TierState, Movie } from "../../../../types/tierlist";
+import type { TierState, Movie } from "@/types/tierlist";
 import { TIER_ORDER } from "../../constants/tier-constants";
 import SimpleTierRow from "./SimpleTierRow";
 import RankMovieModal from "./RankMovieModal";

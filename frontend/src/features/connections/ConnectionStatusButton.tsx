@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api";
+import { api } from "@/api";
 
 interface ConnectionStatusButtonProps {
   targetId: number;
@@ -61,7 +61,11 @@ function ConnectionStatusButton({
   });
 
   if (isLoading) {
-    return <button className="text-sm text-neutral-500" disabled>Loading...</button>;
+    return (
+      <button type="button" className="text-sm text-neutral-500" disabled>
+        Loading...
+      </button>
+    );
   }
 
   const renderButton = () => {
@@ -70,16 +74,18 @@ function ConnectionStatusButton({
         return (
           <>
             <button
+              type="button"
               onClick={() => cancelMutation.mutate()}
               disabled={cancelMutation.isPending}
-              className="text-sm text-red-500 hover:text-red-700 ml-4"
+              className="ml-4 text-sm text-red-500 hover:text-red-700"
             >
               {cancelMutation.isPending ? "Disconnecting..." : "Disconnect"}
             </button>
             <button
+              type="button"
               onClick={() => blockMutation.mutate()}
               disabled={blockMutation.isPending}
-              className="text-sm text-red-500 hover:text-red-700 ml-4"
+              className="ml-4 text-sm text-red-500 hover:text-red-700"
             >
               {blockMutation.isPending ? "Blocking..." : "Block"}
             </button>
@@ -87,7 +93,7 @@ function ConnectionStatusButton({
         );
       case "pending_from_user":
         return (
-          <button className="text-sm text-neutral-500 ml-4" disabled>
+          <button type="button" className="ml-4 text-sm text-neutral-500" disabled>
             Request Sent
           </button>
         );
@@ -95,16 +101,18 @@ function ConnectionStatusButton({
         return (
           <>
             <button
+              type="button"
               onClick={() => askMutation.mutate()}
               disabled={askMutation.isPending}
-              className="text-sm text-purple-600 hover:text-purple-800 ml-4"
+              className="ml-4 text-sm text-purple-600 hover:text-purple-800"
             >
               {askMutation.isPending ? "Accepting..." : "Accept"}
             </button>
             <button
+              type="button"
               onClick={() => rejectMutation.mutate()}
               disabled={rejectMutation.isPending}
-              className="text-sm text-red-500 hover:text-red-700 ml-4"
+              className="ml-4 text-sm text-red-500 hover:text-red-700"
             >
               {rejectMutation.isPending ? "Rejecting..." : "Reject"}
             </button>
@@ -114,16 +122,18 @@ function ConnectionStatusButton({
         return (
           <>
             <button
+              type="button"
               onClick={() => askMutation.mutate()}
               disabled={askMutation.isPending}
-              className="text-sm text-purple-600 hover:text-purple-800 ml-4"
+              className="ml-4 text-sm text-purple-600 hover:text-purple-800"
             >
               {askMutation.isPending ? "Connecting..." : "Connect"}
             </button>
             <button
+              type="button"
               onClick={() => blockMutation.mutate()}
               disabled={blockMutation.isPending}
-              className="text-sm text-red-500 hover:text-red-700 ml-4"
+              className="ml-4 text-sm text-red-500 hover:text-red-700"
             >
               {blockMutation.isPending ? "Blocking..." : "Block"}
             </button>
@@ -133,15 +143,16 @@ function ConnectionStatusButton({
         if (status.am_i_blocker) {
           return (
             <button
+              type="button"
               onClick={() => unblockMutation.mutate()}
               disabled={unblockMutation.isPending}
-              className="text-sm text-red-500 hover:text-red-700 ml-4"
+              className="ml-4 text-sm text-red-500 hover:text-red-700"
             >
               {unblockMutation.isPending ? "Unblocking..." : "Unblock"}
             </button>
           );
         }
-        return <span className="text-sm text-red-500 ml-4">Blocked</span>;
+        return <span className="ml-4 text-sm text-red-500">Blocked</span>;
       default:
         return null;
     }

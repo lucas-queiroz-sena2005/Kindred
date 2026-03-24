@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { api } from "../api";
-import { useAuth } from "../hooks/useAuth";
-import ImagePlaceholder from "../assets/image_placeholder.png";
+import { api } from "@/api";
+import { useAuth } from "@/hooks/useAuth";
+import ImagePlaceholder from "@/assets/image_placeholder.png";
 
 interface TmdbConfigData {
   base_url: string;
@@ -50,7 +50,7 @@ export const TmdbConfigProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
-    fetchConfig();
+    void fetchConfig();
   }, [isAuthenticated, authLoading]);
 
   const getImageUrl = (path: string, size: string = "w500"): string => {

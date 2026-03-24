@@ -78,21 +78,31 @@ async function checkAuthStatus(): Promise<{ user: User } | null> {
     const response = await axiosInstance.get("/user/me");
     return response.data;
   } catch (error) {
+    if (isAxiosError(error)) {
+      const status = error.response?.status;
+      if (status === 401 || status === 403) {
+        return null;
+      }
+    }
     console.error("Erro ao verificar status de autenticação:", error);
     return null;
   }
 }
 
 async function loginUser(creds: LoginCredentials): Promise<User> {
-  const response = await axiosInstance.post("/auth/login", creds);
-  return response.data;
+  const response = await axiosInstance.post<{ user: User; token: string }>(
+    "/auth/login",
+    creds,
+  );
+  return response.data.user;
 }
 
-async function registerUser(creds: RegisterCredentials): Promise<{
-  username: string;
-}> {
-  const response = await axiosInstance.post("/auth/register", creds);
-  return response.data;
+async function registerUser(creds: RegisterCredentials): Promise<User> {
+  const response = await axiosInstance.post<{ user: User; token: string }>(
+    "/auth/register",
+    creds,
+  );
+  return response.data.user;
 }
 
 async function logoutUser(): Promise<void> {

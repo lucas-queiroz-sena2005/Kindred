@@ -1,10 +1,10 @@
 import React from "react";
-import { api } from "../api";
+import { api } from "@/api";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useOnScrollToBottom } from "../hooks/useOnScrollToBottom";
-import { TemplateCard } from "../components/TemplateCard";
-import { TemplateCardSkeleton } from "../components/TemplateCardSkeleton";
-import ErrorMessage from "../components/ErrorMessage";
+import { useOnScrollToBottom } from "@/hooks/useOnScrollToBottom";
+import { TemplateCard } from "@/shared/ui/TemplateCard";
+import { TemplateCardSkeleton } from "@/shared/ui/TemplateCardSkeleton";
+import ErrorMessage from "@/shared/ui/ErrorMessage";
 
 function FeedPage(): React.ReactElement {
   const PAGE_LIMIT = 9;

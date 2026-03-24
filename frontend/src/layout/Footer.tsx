@@ -1,11 +1,11 @@
 import React from "react";
-import tmdbLogo from "../assets/tmdblogo.svg";
+import tmdbLogo from "@/assets/tmdblogo.svg";
 
 const Footer: React.FC = () => {
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 z-10">
-      <div className="w-full max-w-6xl mx-auto p-4 text-xs text-neutral-500">
-        <div className="flex justify-between items-center">
+    <footer className="fixed bottom-0 left-0 right-0 z-10 border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="mx-auto w-full max-w-6xl p-4 text-xs text-neutral-500">
+        <div className="flex items-center justify-between">
           <div>
             <a
               href="https://github.com/lucas-queiroz-sena2005"

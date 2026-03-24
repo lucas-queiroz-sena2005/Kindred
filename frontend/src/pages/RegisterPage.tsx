@@ -1,8 +1,10 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import AuthForm from "../components/AuthForm";
-import type { FormField } from "../components/AuthForm";
-import { useAuth } from "../hooks/useAuth";
+import AuthForm from "@/features/auth/AuthForm";
+import type { FormField } from "@/features/auth/AuthForm";
+import { useAuth } from "@/hooks/useAuth";
+import type { User } from "@/types/auth";
+
 function RegisterPage(): React.ReactElement {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -19,13 +21,12 @@ function RegisterPage(): React.ReactElement {
     password: "",
   };
 
-  function handleRegisterSuccess(data: { username: string }) {
-    console.log(`Successfully registered ${data.username}!`);
+  function handleRegisterSuccess(_data: User) {
     navigate("/login", {
       replace: true,
       state: { message: "Registration successful! Please log in." },
     });
-  };
+  }
 
   return (
     <div className="p-8 bg-neutral-100 dark:bg-neutral-800 rounded-lg shadow-md w-full max-w-sm mx-auto mt-10">

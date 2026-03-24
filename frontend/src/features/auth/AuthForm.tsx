@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from "react";
+import { cn } from "@/shared/lib/cn";
+import { tw } from "@/shared/lib/tw";
 
 export interface FormField {
   name: string;
-  label:string;
+  label: string;
   type: "text" | "email" | "password";
   required?: boolean;
 }
 
-interface AuthFormProps<T> {
+interface AuthFormProps<T extends Record<string, unknown>, R> {
   fields: FormField[];
   initialState: T;
-  submitAction: (formData: T) => Promise<any>;
-  onSuccess: (data: any) => void;
+  submitAction: (formData: T) => Promise<R>;
+  onSuccess: (data: R) => void;
   submitButtonText: string;
   submittingButtonText: string;
-  children?: React.ReactNode; // For content below the form, like a link
-  successMessage?: string; // For a message passed from another page
+  children?: React.ReactNode;
+  successMessage?: string;
 }
 
-function AuthForm<T extends Record<string, any>>({
+function AuthForm<T extends Record<string, unknown>, R>({
   fields,
   initialState,
   submitAction,
@@ -27,10 +29,13 @@ function AuthForm<T extends Record<string, any>>({
   submittingButtonText,
   children,
   successMessage,
-}: AuthFormProps<T>): React.ReactElement {
+}: AuthFormProps<T, R>): React.ReactElement {
   const [formData, setFormData] = useState<T>(initialState);
   const [status, setStatus] = useState<"idle" | "submitting">("idle");
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [message, setMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
 
   useEffect(() => {
     if (successMessage) {
@@ -43,8 +48,19 @@ function AuthForm<T extends Record<string, any>>({
     setStatus("submitting");
     setMessage(null);
     submitAction(formData)
-      .then(onSuccess)
-      .catch((err) => setMessage({ text: err.message, type: "error" }))
+      .then((result) => {
+        try {
+          onSuccess(result);
+        } catch (callbackErr) {
+          console.error("Post-auth callback failed:", callbackErr);
+        }
+      })
+      .catch((err: unknown) =>
+        setMessage({
+          text: err instanceof Error ? err.message : "Request failed",
+          type: "error",
+        }),
+      )
       .finally(() => setStatus("idle"));
   };
 
@@ -56,31 +72,39 @@ function AuthForm<T extends Record<string, any>>({
   return (
     <>
       {message && (
-        <div className={`text-center mb-4 ${message.type === "success" ? "text-green-500" : "text-red-500"}`}>
+        <div
+          className={cn(
+            "mb-4 text-center",
+            message.type === "success" ? "text-green-500" : "text-red-500",
+          )}
+        >
           {message.text}
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-6">
         {fields.map((field) => (
           <div key={field.name} className="flex flex-col">
-            <label htmlFor={field.name} className="mb-2 font-semibold text-neutral-700 dark:text-neutral-300">
+            <label
+              htmlFor={field.name}
+              className="mb-2 font-semibold text-neutral-700 dark:text-neutral-300"
+            >
               {field.label}
             </label>
             <input
               type={field.type}
               id={field.name}
               name={field.name}
-              value={formData[field.name]}
+              value={String(formData[field.name] ?? "")}
               onChange={handleChange}
               required={field.required}
-              className="p-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className={cn("p-3", tw.input, tw.focusRing)}
             />
           </div>
         ))}
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={status === "submitting"}
-          className="w-full p-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 disabled:bg-purple-400"
+          className={cn("w-full p-3", tw.btnPrimary, tw.focusRing)}
         >
           {status === "submitting" ? submittingButtonText : submitButtonText}
         </button>

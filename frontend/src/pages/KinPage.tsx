@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { api } from "../api";
-import { KinUserCard } from "../components/KinUserCard";
-import ErrorMessage from "../components/ErrorMessage";
-import { useOnScrollToBottom } from "../hooks/useOnScrollToBottom";
-import { KinUserCardSkeleton } from "../components/KinUserCardSkeleton";
-import type { KinUser, CompareDetails } from "../types/kin";
-import { useClickOutside } from "../hooks/useClickOutside";
+import { api } from "@/api";
+import { KinUserCard } from "@/features/kin/KinUserCard";
+import ErrorMessage from "@/shared/ui/ErrorMessage";
+import { useOnScrollToBottom } from "@/hooks/useOnScrollToBottom";
+import { KinUserCardSkeleton } from "@/features/kin/KinUserCardSkeleton";
+import type { KinUser, CompareDetails } from "@/types/kin";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 type ConnectionFilter = "all" | "connected" | "unconnected";
 type CategoryFilter = string;

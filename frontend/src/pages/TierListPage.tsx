@@ -1,12 +1,12 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { TierList } from "../features/tierlist/components/TierList";
-import { api } from "../api";
-import type { TierListData } from "../types/tierlist";
-import { MovieDetailSidebar } from "../features/tierlist/components/MovieDetailSidebar";
-import { TierListPageProvider } from "../features/tierlist/context/TierListPageProvider";
-import ErrorMessage from "../components/ErrorMessage";
+import { TierList } from "@/features/tierlist/components/TierList";
+import { api } from "@/api";
+import type { TierListData } from "@/types/tierlist";
+import { MovieDetailSidebar } from "@/features/tierlist/components/MovieDetailSidebar";
+import { TierListPageProvider } from "@/features/tierlist/context/TierListPageProvider";
+import ErrorMessage from "@/shared/ui/ErrorMessage";
 
 function TierListPage(): React.ReactElement {
   const { id } = useParams();

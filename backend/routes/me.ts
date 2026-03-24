@@ -18,7 +18,10 @@ userRouter.get("/me", async (req: AuthenticatedRequest, res: Response) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: "User not found." });
+      // Stale JWT (e.g. DB reset) — treat like unauthenticated so clients clear session.
+      return res
+        .status(401)
+        .json({ message: "Session is no longer valid. Please sign in again." });
     }
 
     res.status(200).json({ user: rows[0] });

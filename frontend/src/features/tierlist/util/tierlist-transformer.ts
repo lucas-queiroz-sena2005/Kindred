@@ -1,4 +1,4 @@
-import type { TierListData, TierState, TierlistResponse } from "../../../types/tierlist";
+import type { TierListData, TierState, TierlistResponse } from "@/types/tierlist";
 import {
   TIER_ORDER,
   TIERS,

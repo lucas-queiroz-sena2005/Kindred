@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/src/server.js",
     "db:seed": "node dist/db/seed.js",
+    "db:clean": "node dist/db/clean.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },

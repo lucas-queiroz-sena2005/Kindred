@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import { Outlet } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
+import { useAuth } from "@/hooks/useAuth";
+import Footer from "./Footer";
 import Navbar from "./Navbar";
 import Topbar from "./Topbar";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "../api";
-import { useAuth } from "../hooks/useAuth";
-import Footer from "./Footer";
 
 function Layout(): React.ReactElement {
   const { isAuthenticated } = useAuth();
@@ -25,10 +25,10 @@ function Layout(): React.ReactElement {
   }, [notificationCount]);
 
   return (
-    <div className="min-h-screen font-sans bg-neutral-50 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50 flex flex-col overflow-x-hidden">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-neutral-50 font-sans text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50">
       <Topbar />
       <Navbar />
-      <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 pb-24 min-w-0">
+      <main className="mx-auto min-w-0 w-full max-w-6xl px-4 pb-24 pt-36 sm:px-6 lg:px-8">
         <Outlet />
       </main>
       <Footer />

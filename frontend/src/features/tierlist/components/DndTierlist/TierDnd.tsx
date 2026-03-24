@@ -1,8 +1,8 @@
 import { Droppable } from "@hello-pangea/dnd";
 import DataCard from "./Datacard";
-import type { Tier, Movie } from "../../../../types/tierlist";
+import type { Tier, Movie } from "@/types/tierlist";
 import { TIERS, UNRANKED_TIER } from "../../constants/tier-constants";
-import { useTmdbConfig } from "../../../../context/TmdbConfigProvider";
+import { useTmdbConfig } from "@/shared/context/TmdbConfigProvider";
 
 const TIER_METADATA_MAP = Object.fromEntries(
   [...TIERS, UNRANKED_TIER].map((t) => [t.id, t])
