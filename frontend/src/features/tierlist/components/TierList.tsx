@@ -2,14 +2,20 @@ import React, { useState, useEffect } from "react";
 import TierlistDnd from "./DndTierlist/TierlistDnd";
 import TierlistTap from "./TapTierlist/TierlistTap";
 import { useNavigate } from "react-router-dom";
-import type { TierState, TierListData, Movie } from "@/types/tierlist";
+import type { TierState, TierListData } from "@/types/tierlist";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { transformToTierState, transformToTierData } from "../util/tierlist-transformer";
 import { api } from "@/api";
 import { useTierListPage } from "../context/TierListPageProvider";
+import { cn } from "@/shared/lib/cn";
 
 type InteractionMode = "auto" | "drag" | "tap";
-const MODES: InteractionMode[] = ["auto", "drag", "tap"];
+
+const MODE_OPTIONS: { value: InteractionMode; label: string }[] = [
+  { value: "auto", label: "Auto" },
+  { value: "drag", label: "Drag & drop" },
+  { value: "tap", label: "Tap" },
+];
 
 interface TierListProps {
   templateData: TierListData | undefined;
@@ -70,18 +76,30 @@ export function TierList({
 
   return (
     <>
-      <div className="mode-switcher mb-4">
-        {MODES.map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            className={`px-4 py-2 rounded ${
-              mode === m ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
-          >
-            {m.charAt(0).toUpperCase() + m.slice(1)}
-          </button>
-        ))}
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            Mode:
+          </span>
+          <div className="flex rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+            {MODE_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                className={cn(
+                  "px-3 py-1 text-sm font-medium transition-colors duration-150 first:rounded-l-md last:rounded-r-md",
+                  "focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900",
+                  mode === value
+                    ? "bg-neutral-800 text-white dark:bg-neutral-600"
+                    : "text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {effectiveMode === "drag" && (

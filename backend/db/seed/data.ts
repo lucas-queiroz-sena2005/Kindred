@@ -35,39 +35,63 @@ export const templates = [
   {
     id: 1,
     title: "Modern Sci-Fi Architects",
-    movieIds: [157336, 438631, 335984, 62],
+    movieIds: [157336, 438631, 335984, 62, 603, 76341, 496243],
   },
-  { id: 2, title: "The Crime & Grit Era", movieIds: [103, 680, 769, 106646] },
-  { id: 3, title: "Foundations of Suspense", movieIds: [426, 567, 527, 213] },
-  { id: 4, title: "Animation & Whimsy", movieIds: [129, 128, 508883, 30031] },
+  {
+    id: 2,
+    title: "The Crime & Grit Era",
+    movieIds: [103, 680, 769, 106646, 238, 550, 807],
+  },
+  {
+    id: 3,
+    title: "Foundations of Suspense",
+    movieIds: [426, 567, 527, 213, 28, 935, 680],
+  },
+  {
+    id: 4,
+    title: "Animation & Whimsy",
+    movieIds: [129, 128, 508883, 30031, 550, 500, 603],
+  },
   {
     id: 5,
     title: "Modern Indie Perspectives",
-    movieIds: [391713, 447332, 120467, 792307],
+    movieIds: [391713, 447332, 120467, 792307, 420617, 496243, 670],
   },
   {
     id: 6,
     title: "High-Concept Horror",
-    movieIds: [420617, 419430, 530385, 603],
+    movieIds: [420617, 419430, 530385, 603, 807, 550, 106646],
   },
-  { id: 7, title: "The 70s Auteur Revolution", movieIds: [238, 28, 935, 103] },
+  {
+    id: 7,
+    title: "The 70s Auteur Revolution",
+    movieIds: [238, 28, 935, 103, 680, 769, 424],
+  },
   {
     id: 8,
     title: "Action & Pop-Culture",
-    movieIds: [76341, 245891, 118340, 155],
+    movieIds: [76341, 245891, 118340, 155, 106646, 680, 769],
   },
   {
     id: 9,
     title: "Historical & War Epics",
-    movieIds: [424, 857, 530915, 872585],
+    movieIds: [424, 857, 530915, 872585, 238, 311, 11324],
   },
-  { id: 10, title: "90s Cult Phenomenon", movieIds: [550, 807, 603, 500] },
+  {
+    id: 10,
+    title: "90s Cult Phenomenon",
+    movieIds: [550, 807, 603, 500, 680, 103, 769],
+  },
   {
     id: 11,
     title: "International Auteurs",
-    movieIds: [496243, 670, 705996, 398818],
+    movieIds: [496243, 670, 705996, 398818, 420617, 530385, 603],
   },
-  { id: 12, title: "Western & Americana", movieIds: [311, 11324, 44264, 3114] },
+  {
+    id: 12,
+    title: "Western & Americana",
+    movieIds: [311, 11324, 44264, 3114, 238, 424, 857],
+  },
 ];
 
 export const users = [

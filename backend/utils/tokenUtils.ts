@@ -2,6 +2,7 @@ import { Response, CookieOptions } from "express";
 import jwt from "jsonwebtoken";
 import type { JwtPayload, SignOptions } from "jsonwebtoken";
 import { authConfig } from "../config/authConfig.js";
+import { envIsTruthy } from "./envParse.js";
 
 const isProduction = authConfig.IS_PRODUCTION;
 const jwtSecret = authConfig.JWT_SECRET;
@@ -12,11 +13,11 @@ const maxAge = authConfig.COOKIE_MAX_AGE;
  * SameSite=None requires Secure. In dev (HTTP + localhost), that combination is
  * rejected by browsers, so the session cookie was never stored and /user/me failed.
  *
- * Use CROSS_SITE_COOKIES=true when the SPA and API are on different sites
- * (e.g. Vercel app + separate API origin); then SameSite=None; Secure is required.
+ * Use CROSS_SITE_COOKIES=true (any case, or 1 / yes) when the SPA and API are on
+ * different sites (e.g. Vercel app + separate API origin); then SameSite=None; Secure is required.
  */
 function sessionCookieOptions(maxAgeMs?: number): CookieOptions {
-  const crossSite = process.env.CROSS_SITE_COOKIES === "true";
+  const crossSite = envIsTruthy(process.env.CROSS_SITE_COOKIES);
   if (crossSite) {
     return {
       httpOnly: true,

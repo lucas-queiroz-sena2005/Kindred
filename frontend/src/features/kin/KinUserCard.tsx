@@ -76,23 +76,29 @@ export function KinUserCard({
           </h3>
           <p
             className="cursor-default text-sm font-medium text-purple-700 dark:text-purple-300"
-            title={classification.tagline}
+            title={`${classification.label} — ${classification.tagline}`}
           >
             {classification.label}
           </p>
           <div className="mt-4 border-t border-neutral-100 pt-4 dark:border-neutral-700">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-stretch gap-2">
               <button
                 type="button"
                 onClick={handleDetailsClick}
-                className={cn(tw.btnSecondary, "relative z-10")}
+                className={cn(
+                  tw.btnSecondary,
+                  "relative z-10 inline-flex min-h-10 items-center justify-center px-4 py-2 text-sm font-medium",
+                )}
               >
                 {isOpen ? "Close" : "Details"}
               </button>
               <button
                 type="button"
                 onClick={handleButtonClick}
-                className={cn(tw.btnSecondary, "relative z-10")}
+                className={cn(
+                  tw.btnSecondary,
+                  "relative z-10 inline-flex min-h-10 items-center justify-center px-4 py-2 text-sm font-medium",
+                )}
               >
                 {isMessageOpen ? "Cancel" : "Quick Message"}
               </button>
@@ -100,7 +106,10 @@ export function KinUserCard({
                 to={`/messages/${user.id}`}
                 state={{ targetUser: user }}
                 onClick={(e) => e.stopPropagation()}
-                className={cn(tw.btnPrimary, "relative z-10 px-3 py-1 text-sm")}
+                className={cn(
+                  tw.btnPrimary,
+                  "relative z-10 inline-flex min-h-10 items-center justify-center px-4 py-2 text-sm font-medium",
+                )}
               >
                 Go to Messages
               </Link>

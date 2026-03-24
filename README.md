@@ -126,7 +126,7 @@ Users can filter by feature category. Slices use **1-based** PostgreSQL subscrip
 ((current.profile_vector::real[])[1:19])::vector
 ```
 
-The Kin cards show **five qualitative labels** derived only on the client from the numeric affinity (e.g. “Opposite reels” … “Same marquee”); see `frontend/src/utils/kinClassification.ts`.
+The Kin cards show **five qualitative labels** derived on the client from the numeric affinity (with rough score bands); see `frontend/src/features/kin/kinClassification.ts`.
 
 ## Technology Stack
 
@@ -188,7 +188,8 @@ Users can override this with manual mode selection.
 **Session cookie policy** (`backend/utils/tokenUtils.ts`):
 
 - **Default (same-site / typical dev):** `SameSite=Lax`, `Secure` only when `NODE_ENV=production`. This works for a Vite dev server and API on different **ports** of `localhost` (still the same site for cookies). Using `SameSite=None` without `Secure` in dev caused browsers to **drop** the cookie, so `/user/me` failed while the login JSON body still returned a user—confusing UI state.
-- **True cross-site SPA + API** (different registrable domains, HTTPS): set backend env `CROSS_SITE_COOKIES=true` → `SameSite=None; Secure`. Documented in `.env.example`.
+- **True cross-site SPA + API** (different hostnames, HTTPS): set backend `CROSS_SITE_COOKIES` to a truthy value (`true`, `TRUE`, `1`, `yes`) → `SameSite=None; Secure`. The code previously only treated lowercase `true` as enabled, so values like `TRUE` from Railway left `SameSite=Lax` on and browsers **rejected** `Set-Cookie` for cross-origin XHR—symptoms: DevTools “cookie rejected because cross-site”, `401` / “Invalid or expired token” on protected routes because no cookie was stored.
+- **`FRONTEND_URL` must match the SPA origin** (scheme + host + port) for `Access-Control-Allow-Origin` with credentials. You can pass **comma-separated** origins (e.g. prod + preview). Trailing slashes in env are normalized; the browser’s `Origin` header never includes a path.
 
 **API responses:** `POST /api/auth/login` and `POST /api/auth/register` return `{ user: { id, username }, token }`. The frontend must use **`response.data.user`** for context state (not the whole `data` object). New accounts keep `profile_vector` **NULL** until the first tier list save; registration does not write an all-zero vector.
 
@@ -417,31 +418,45 @@ npm run dev               # Starts on :5173; set VITE_API_URL if backend not at 
 
 ### Environment Variables
 
-**Backend** (e.g. `backend/.env` or project root `.env` when running from backend):
+See root **`.env.example`** for a commented template. Summary:
 
-| Variable                | Purpose                                      |
-| ----------------------- | -------------------------------------------- |
-| `DATABASE_URL`          | PostgreSQL connection string                 |
-| `JWT_SECRET`            | Required; used for signing tokens            |
-| `JWT_EXPIRY`            | Optional; default `1h`                       |
-| `TMDB_API_KEY`          | Required for seed; used by sync job          |
-| `FRONTEND_URL`          | CORS origin; default `http://localhost:5173` |
-| `CROSS_SITE_COOKIES`    | Set `true` only if SPA and API are on different sites (HTTPS); see Authentication in Key Features |
-| `PORT`                  | Server port; default `3001`                  |
-| `NODE_ENV`              | `development` / `production` / `test`         |
-| `SYNC_INTERVAL_MINUTES` | TMDB sync interval; default `1440` (24h)    |
+**Backend** (e.g. `backend/.env`, or variables on the API service in Railway):
 
-**Frontend:** `VITE_API_URL` (optional; default `/api`) — base URL for API requests.
+| Variable                | Required | Purpose |
+| ----------------------- | -------- | ------- |
+| `DATABASE_URL`          | Yes (hosted) | PostgreSQL connection string (Railway Postgres plugin provides this). |
+| `JWT_SECRET`            | Yes      | Secret for signing JWTs in the `token` cookie. |
+| `JWT_EXPIRY`            | No       | Token lifetime inside the JWT; default `1h`. Cookie max age is configured in code (`authConfig`). |
+| `TMDB_API_KEY`          | For seed & sync | Movie metadata; sync job logs a warning if missing. |
+| `FRONTEND_URL`          | Yes (hosted) | **Allowed SPA origin(s)** for CORS with credentials. Must equal the browser `Origin` (e.g. `https://myapp.up.railway.app`). **Comma-separated** for multiple URLs (preview + production). Trailing `/` is optional and stripped. Default local: `http://localhost:5173`. |
+| `CROSS_SITE_COOKIES`    | When SPA ≠ API host | If the user loads the UI from a **different hostname** than the API, set to `true`, `TRUE`, `1`, or `yes` so the session cookie uses `SameSite=None; Secure`. Omit or false when same-site (e.g. single Docker host proxying `/api`). |
+| `PORT`                  | No       | Listen port; default `3001`. Many hosts set `PORT` automatically. |
+| `NODE_ENV`              | No       | `development` / `production` / `test`. Affects cookie `Secure` in default (non–cross-site) mode and error verbosity. |
+| `SYNC_INTERVAL_MINUTES` | No       | TMDB sync cadence; default `1440` (24h). |
 
-**Docker / root `.env.example`:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `JWT_SECRET`, `TMDB_API_KEY`, `VITE_API_URL`, `NODE_ENV`, `FRONTEND_URL`, `SYNC_INTERVAL_MINUTES`, optional `CROSS_SITE_COOKIES`.
+**Frontend (Vite — build time):**
+
+| Variable        | Purpose |
+| --------------- | ------- |
+| `VITE_API_URL`  | Base URL for the API (include `/api` if that is your mount path). Default `/api` (relative), which only works when the HTML is served from the same host as the API or a reverse proxy forwards `/api`. **Split Railway services:** set to the public API URL, e.g. `https://your-backend.up.railway.app/api`. |
+
+**Cookie + CORS checklist (split frontend/backend URLs):**
+
+1. API has `FRONTEND_URL` exactly matching the site users open in the browser.
+2. API has `CROSS_SITE_COOKIES` truthy so `Set-Cookie` is not dropped on cross-origin responses.
+3. Both sides use **HTTPS** in production (`Secure` cookies).
+4. Frontend axios uses `withCredentials: true` (already set in `frontend/src/api.ts`).
+5. Rebuild/redeploy the frontend after changing `VITE_API_URL`.
+
+**Docker / Compose:** root `.env` supplies Postgres credentials, `JWT_SECRET`, `TMDB_API_KEY`, `VITE_API_URL`, `FRONTEND_URL`, `SYNC_INTERVAL_MINUTES`, and optional `CROSS_SITE_COOKIES` if you ever front the SPA from a different host than the API.
 
 ### Hosted deployment (e.g. Railway, Fly.io, Render)
 
 The app is **not** tied to a single host. Any platform that provides:
 
-- A **Node** service for the backend with `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` (your SPA origin), `PORT` (often injected by the host), and optional `TMDB_API_KEY` / `SYNC_INTERVAL_MINUTES`.
+- A **Node** service for the backend with `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` (exact SPA origin(s), comma-separated if needed), **`CROSS_SITE_COOKIES=true`** when the SPA is on another hostname, `PORT` (often injected by the host), and optional `TMDB_API_KEY` / `SYNC_INTERVAL_MINUTES`.
 - A **PostgreSQL** database with the `vector` extension (Railway Postgres templates often work; run `database.sql` / migrations as you do locally).
-- A **static** or **Node** frontend with `VITE_API_URL` pointing at the public API base (e.g. `https://api.yourapp.com/api`).
+- A **static** or **Node** frontend built with `VITE_API_URL` pointing at the public API base (e.g. `https://your-api.up.railway.app/api`), then redeployed whenever that URL changes.
 
 Example public UI: [kindred.up.railway.app](https://kindred.up.railway.app) — configure the same env semantics there or in Docker; no Railway-specific code paths are required.
 

@@ -6,28 +6,28 @@ export interface KinClassification {
 const BANDS: { max: number; label: string; tagline: string }[] = [
   {
     max: 0.2,
-    label: "Opposite reels",
-    tagline: "Contrasting taste — you rarely pick the same lane.",
+    label: "Very different taste (under ~20% match)",
+    tagline: "You rarely agree on what to watch; preferences point opposite ways.",
   },
   {
     max: 0.4,
-    label: "Different aisles",
-    tagline: "Some overlap, but your marquees don’t match often.",
+    label: "Mostly different (~20–40%)",
+    tagline: "A little overlap, but you usually drift toward different kinds of films.",
   },
   {
     max: 0.6,
-    label: "Shared screen",
-    tagline: "Solid middle ground — familiar but not identical.",
+    label: "Somewhat similar (~40–60%)",
+    tagline: "You share a middle ground—familiar territory, not identical picks.",
   },
   {
     max: 0.8,
-    label: "Strong kinship",
-    tagline: "You’d argue about the same films at the same volume.",
+    label: "Quite similar (~60–80%)",
+    tagline: "Strong overlap; you’d often recommend the same movies to each other.",
   },
   {
     max: 1.01,
-    label: "Same marquee",
-    tagline: "Rare alignment — you’re pulling from the same playlist.",
+    label: "Extremely similar (about 80%+)",
+    tagline: "Very close taste—your rankings line up far more often than average.",
   },
 ];
 

@@ -1,127 +1,29 @@
 import "dotenv/config";
-import express, { Request, Response, NextFunction, Express } from "express";
+import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import rateLimit from "express-rate-limit";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import pool from "../db/db.js";
 import apiRoutes from "../routes/index.js";
-import { ApiError } from "../errors/customErrors.js";
-import { startJobs } from "../jobs/index.js";
-import { TmdbSyncService } from "../services/jobs/tmdbSyncService.js";
+import { globalLimiter, authRouteLimiter } from "./rateLimiters.js";
+import { corsOptions } from "./corsOptions.js";
+import { errorHandler } from "../middleware/errorHandler.js";
+import { startServer } from "./startServer.js";
+
+const testing =
+  process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);
 
 const app: Express = express();
-const PORT = process.env.PORT || 3001;
-const IS_PROD = process.env.NODE_ENV === "production";
-const IS_TESTING = process.env.NODE_ENV === "test" || process.env.VITEST;
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 app.set("trust proxy", 1);
 
-const limiter = (windowMs: number, max: number, message: string) =>
-  rateLimit({
-    windowMs,
-    max,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: "Rate Limit Exceeded", message },
-  });
-
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(limiter(15 * 60 * 1000, 1000, "Global limit exceeded."));
+app.use(globalLimiter);
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 app.use(express.static("public"));
 
-app.use("/api/auth", limiter(60 * 60 * 1000, 100, "Too many login attempts."));
+app.use("/api/auth", authRouteLimiter);
 app.use("/api", apiRoutes);
+app.use(errorHandler);
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  const status = err instanceof ApiError ? err.statusCode : 500;
-
-  if (!IS_TESTING) {
-    console.error(
-      `[${new Date().toISOString()}] 🔴 ${req.method} ${req.path} - ${err.message}`,
-    );
-    if (status === 500) console.error(err.stack);
-  }
-
-  if (err instanceof SyntaxError && "body" in err) {
-    return res
-      .status(400)
-      .json({ error: "Invalid JSON", message: "Malformed body." });
-  }
-
-  res.status(status).json({
-    error: err.name || "InternalError",
-    message:
-      IS_PROD && status === 500
-        ? "Something went wrong on our end."
-        : err.message,
-  });
-});
-
-async function syncSchema(client: any) {
-  try {
-    const tableCountResult = await client.query(`
-      SELECT count(*) FROM information_schema.tables
-      WHERE table_schema = 'public';
-    `);
-
-    const count = parseInt(tableCountResult.rows[0].count);
-
-    if (count < 16) {
-      console.log("📂 [DB] Schema incomplete. Initializing...");
-      const sqlPath = path.join(__dirname, "../../db/database.sql");
-      const sql = fs.readFileSync(sqlPath, "utf8");
-      await client.query(sql);
-      console.log("✅ [DB] Schema initialized.");
-    } else {
-      console.log("💎 [DB] Schema verified.");
-    }
-  } catch (err) {
-    console.error("❌ [DB] Schema sync failed:", err);
-    throw err;
-  }
-}
-
-async function bootstrap() {
-  let client;
-  try {
-    const start = Date.now();
-    client = await pool.connect();
-
-    await syncSchema(client);
-    console.log(`✅ [DB] Connected & Synced (${Date.now() - start}ms)`);
-
-    await TmdbSyncService.updateConfiguration().catch(() =>
-      console.warn("⚠️  [TMDB] Sync failed, using cache."),
-    );
-
-    startJobs();
-
-    app.listen(Number(PORT), "0.0.0.0", () => {
-      console.log(
-        `🚀 [SERVER] Running on port ${PORT} [${process.env.NODE_ENV}]`,
-      );
-    });
-  } catch (err) {
-    console.error("❌ [FATAL] Startup failed:", err);
-    process.exit(1);
-  } finally {
-    if (client) client.release();
-  }
-}
-
-if (!IS_TESTING) bootstrap();
+if (!testing) void startServer(app);
 
 export default app;

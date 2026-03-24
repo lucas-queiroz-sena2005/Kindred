@@ -20,11 +20,9 @@ type AuthConfig = {
 };
 
 export const authConfig: AuthConfig = {
-  // Validation
   USERNAME_REGEX: /^[a-zA-Z0-9_-]{1,20}$/,
-  USERNAME_REQUIREMENTS: "Username must be 1–20 characters, using letters, numbers, _ or -.",
-
-  // Security
+  USERNAME_REQUIREMENTS:
+    "Username must be 1–20 characters, using letters, numbers, _ or -.",
   SALT_ROUNDS: 10,
   JWT_EXPIRY: jwtExpiry ?? "1h",
   COOKIE_MAX_AGE: 3 * 24 * 60 * 60 * 1000,
